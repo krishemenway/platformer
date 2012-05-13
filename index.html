@@ -1,0 +1,183 @@
+<html>
+	<head>
+		<title>Test Project</title>
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+		
+		<script src="js/game.js"></script>
+		<script src="js/player.js"></script>
+		<script src="js/platform.js"></script>
+		
+		<script type="text/javascript">
+			var backgrounds = {};
+			var platforms = {};
+			
+			var backgroundLoaded = false;
+			var playerLoaded = false;
+			
+			var currentCanvas;
+			var currentCanvasContext;
+			var currentBackground;
+			var then = Date.now();
+			
+			var gameHeight;
+			var gameWidth;
+			
+			var gameX = 0;
+			var gameY = 0;
+			
+			var gravity = 350;
+			
+			var keysDown = {};
+			
+			function loadPlayer() {
+				
+			}
+			
+			function getCanvas() {
+				if(!currentCanvas) {
+					currentCanvas = $("canvas#game")[0];
+				}
+				
+				return currentCanvas;
+			}
+			
+			function getCanvasContext() {
+				var canvas = getCanvas();
+
+				currentCanvasContext = canvas.getContext("2d");
+				
+				return currentCanvasContext;
+			}
+			
+			function addBackground(name,background_path) {
+				var background = new Image();
+				
+				background.onload = function () {
+					backgroundLoaded = true;
+				};
+				
+				background.src = background_path;
+				
+				backgrounds[name] = background;
+			}
+			
+			function setBackground(name) {
+				currentBackground = backgrounds[name];
+			}
+			
+			function initialize() {
+				var canvas = getCanvas();
+				player.initialize();
+				
+				gameWidth = parseInt(canvas.width);
+				gameHeight = parseInt(canvas.height);
+				
+				setBackground("level_1");
+			}
+			
+			loadPlayer();
+			addBackground("level_1", "images/level_1.jpg");
+			
+			addEventListener("keydown", function (e) {
+				keysDown[e.keyCode] = true;
+			}, false);
+
+			addEventListener("keyup", function (e) {
+				delete keysDown[e.keyCode];
+			}, false);
+			
+			var update = function (modifier) {
+				var difference = player.speed * modifier;
+				
+				if (player.x + player.width() + difference > gameX + (gameWidth * 3 / 5)) {
+					gameX += difference;
+				}
+				
+				if (player.x - difference <= gameX + (gameWidth * 2 / 5)) {
+					if(gameX - difference >= 0) {
+						gameX -= difference;
+					} else {
+						gameX = 0;
+					}
+				}
+				
+				// Player holding up
+				if (38 in keysDown) {
+					player.y -= player.jump_force * modifier;
+				}
+				
+				// Player holding down
+				if (40 in keysDown) {
+					player.y += difference;
+				}
+				
+				// Player holding left
+				if (37 in keysDown) {
+					player.facing = "left";
+					
+					if(player.x - difference > 0) {
+						player.x -= difference;
+					}
+				}
+				
+				// Player holding right
+				if (39 in keysDown) {
+					player.facing = "right";
+					
+					player.x += difference;
+				}
+				
+				if(player.y >= player.get_offscreen_max(gameHeight)) {
+					player.y = player.get_offscreen_max(gameHeight);
+				} else {
+					player.y += gravity * modifier;
+				}
+			};
+			
+			var render = function (modifier) {
+				var ctx = getCanvasContext();
+				player.image.src = "images/robot-" + player.facing + ".png";
+				
+				console.log(gameX);
+				
+				for(platform in platforms) {
+					if(gameX > platform.x && gameX <= platform.x) {
+						
+					}
+				}
+				
+				if (backgroundLoaded) {
+					ctx.drawImage(currentBackground, 0, 0, currentBackground.width, currentBackground.height, 0, 0, currentBackground.width, currentBackground.height);
+				}
+
+				if (player.image_loaded) {
+					ctx.drawImage(player.image, player.x, player.y);
+				}
+			};
+			
+			var main = function() {
+				var now = Date.now();
+				var delta = now - then;
+				
+				update(delta / 1000);
+				render();
+				
+				then = now;
+			};
+			
+			$(function() {
+				initialize();
+				setInterval(main, 1);
+			});
+		</script>
+	</head>
+	
+	<body>
+		<h1>Hiii</h1>
+		
+		<canvas id="game" width="550" height="480">
+		</canvas>
+	</body>
+</html>
