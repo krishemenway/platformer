@@ -6,15 +6,25 @@ define(["startScreenState", "runningGameState", "exports"], function(startScreen
 		keysDown = {},
 		controller = {},
 		controls = {
-			enterKey: 13,
-			leftKey: 37,
-			rightKey: 39,
+			startKey: 13,
+			leftKey: [97,37],
+			rightKey: [100,39],
 			fireKey: 32,
-			jumpKey: 38
+			jumpKey: [119,38]
 		};
 
 	function controlIsActivated(control) {
-		return controls[control] in keysDown;
+		if(typeof controls[control] === "number") {
+			return controls[control] in keysDown;
+		}
+
+		for(var c = 0; c < controls[control].length; c++) {
+			if(controls[control][c] in keysDown) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	addEventListener("keydown", function (e) {

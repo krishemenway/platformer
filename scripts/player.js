@@ -69,29 +69,13 @@ define([], function() {
 			return {
 				projectileX: initialX,
 				projectileY: initialY,
-				velocity: 500 * projectileDirection
+				velocity: 900 * projectileDirection
 			};
 		}
 
-		function render(canvas, sceneWidth, sceneHeight, gameWidth, gameHeight) {
+		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
-
-				var x = 0;
-
-				if(center() > sceneWidth - gameWidth / 2) {
-					x = sceneWidth - playerX;
-				} else if(center() <= gameWidth / 2) {
-					x = playerX;
-				} else {
-					x = gameWidth / 2 - width / 2;
-				}
-
-				if(window.debug) {
-					canvas.fillStyle = "rgb(255,0,0)";
-					canvas.fillRect(gameWidth / 2,0,1,10000);
-				}
-
-				canvas.drawImage(sprite, currentDirection, 0, width, height, x, playerY, width, height);
+				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, playerY, width, height);
 			}
 		}
 

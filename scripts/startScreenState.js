@@ -14,7 +14,7 @@ define(["exports"], function(exports) {
 	}
 
 	function update(controller, timeSinceLastFrame) {
-		if(controller.enterKeyIsPressed()) {
+		if(controller.startKeyIsPressed()) {
 			startGame();
 		}
 	}

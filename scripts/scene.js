@@ -9,6 +9,7 @@ define(["player", "platform"], function(Player, Platform) {
 			sceneHeight = 0,
 			gameWidth = 0,
 			gameHeight = 0,
+			lastTopLeftX,
 			player,
 			enemies = [],
 			platforms = [],
@@ -35,6 +36,12 @@ define(["player", "platform"], function(Player, Platform) {
 			}
 		}
 
+		function updateProjectiles(timeSinceLastFrame) {
+			projectiles.forEach(function(projectile) {
+				projectile.projectileX += projectile.velocity * timeSinceLastFrame;
+			});
+		}
+
 		function update(controller, timeSinceLastFrame) {
 			player.update(controller, timeSinceLastFrame);
 
@@ -52,18 +59,29 @@ define(["player", "platform"], function(Player, Platform) {
 				fireWeapon();
 			}
 
-			projectiles.forEach(function(projectile) {
-				projectile.projectileX += projectile.velocity * timeSinceLastFrame;
-			});
+			updateProjectiles(timeSinceLastFrame);
+		}
+
+		function renderProjectiles(canvas, canvasTopLeftX, canvasTopLeftY) {
+
+			for(var p = 0; p < projectiles.length; p++) {
+				var projectile = projectiles[p];
+
+				if(projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
+					canvas.fillStyle = "rgb(35,35,35)";
+					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 5, 2);
+				} else {
+					projectiles.slice(p, 1);
+				}
+			}
 		}
 
 		function render(canvas) {
 			var canvasTopLeftX = player.playerCenter() - gameWidth / 2;
-			var lastCenterPoint = sceneWidth - gameWidth / 2;
 			canvasTopLeftX = canvasTopLeftX > 0 ? canvasTopLeftX : 0;
 
-			if(canvasTopLeftX > lastCenterPoint) {
-				canvasTopLeftX = lastCenterPoint;
+			if(canvasTopLeftX > lastTopLeftX) {
+				canvasTopLeftX = lastTopLeftX;
 			}
 
 			var canvasTopLeftY = Math.max(Math.min(player.playerBottom() - gameHeight, 0), sceneHeight - gameHeight);
@@ -77,29 +95,22 @@ define(["player", "platform"], function(Player, Platform) {
 				canvas.drawImage(background, canvasTopLeftX, canvasTopLeftY, gameWidth, gameHeight, 0, 0, gameWidth, gameHeight);
 			}
 
+			renderProjectiles(canvas, canvasTopLeftX, canvasTopLeftY);
+			player.render(canvas, canvasTopLeftX, canvasTopLeftY);
+
 			if(window.debug) {
-				renderDebug(canvas);
+				renderDebug(canvas, canvasTopLeftX, canvasTopLeftY);
 			}
-
-			player.render(canvas, sceneWidth, sceneHeight, gameWidth, gameHeight);
-
-			projectiles.forEach(function(projectile) {
-				if(projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
-					canvas.fillStyle = "rgb(35,35,35)";
-					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 5, 2);
-				}
-			});
 		}
 
-		function renderDebug(canvas) {
+		function renderDebug(canvas, canvasTopLeftX, canvasTopLeftY) {
 			canvas.font="12px Arial";
 			canvas.fillStyle = "rgb(0,0,0)";
-			canvas.fillText("PlayerX: " + player.playerLeft(), 0, 50);
-			canvas.fillText("PlayerY: " + player.playerTop(), 0, 75);
-			canvas.fillText("GameHeight: " + gameHeight, 0, 100);
-			canvas.fillText("GameWidth: " + gameWidth, 0, 125);
-			canvas.fillText("SceneWidth: " + sceneWidth, 0, 150);
-			canvas.fillText("SceneHeight: " + sceneHeight, 0, 175);
+			canvas.fillText("PlayerX: " + player.playerLeft(), 0, 25);
+			canvas.fillText("PlayerY: " + player.playerTop(), 0, 50);
+			canvas.fillText("CanvasTopLeftX: " + canvasTopLeftX, 0, 75);
+			canvas.fillText("CanvasTopLeftY: " + canvasTopLeftY, 0, 100);
+			canvas.fillText("ProjectileCount: " + projectiles.length, 0, 125);
 		}
 
 		function initializeBackground(backgroundSource) {
@@ -110,6 +121,7 @@ define(["player", "platform"], function(Player, Platform) {
 				backgroundLoaded = true;
 				sceneHeight = background.height;
 				sceneWidth = background.width;
+				lastTopLeftX = sceneWidth - gameWidth;
 			};
 
 			background.src = backgroundSource;

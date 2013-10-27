@@ -4,4 +4,6 @@ require(["loop"], function(loop) {
 	
 	var canvas = document.getElementById("game");
 	loop.init(canvas);
+
+	window.debug = true;
 });
