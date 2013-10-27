@@ -58,21 +58,22 @@ define(["player", "platform"], function(Player, Platform) {
 		}
 
 		function render(canvas) {
+			var canvasTopLeftX = player.playerCenter() - gameWidth / 2;
+			var lastCenterPoint = sceneWidth - gameWidth / 2;
+			canvasTopLeftX = canvasTopLeftX > 0 ? canvasTopLeftX : 0;
+
+			if(canvasTopLeftX > lastCenterPoint) {
+				canvasTopLeftX = lastCenterPoint;
+			}
+
+			var canvasTopLeftY = Math.max(Math.min(player.playerBottom() - gameHeight, 0), sceneHeight - gameHeight);
+
 			if(!gameHeight || !gameWidth) {
 				gameHeight = canvas.canvas.height;
 				gameWidth = canvas.canvas.width;
 			}
 
 			if(backgroundLoaded) {
-				var canvasTopLeftX = player.playerCenter() - gameWidth / 2;
-				var lastCenterPoint = sceneWidth - gameWidth / 2;
-				canvasTopLeftX = canvasTopLeftX > 0 ? canvasTopLeftX : 0;
-
-				if(canvasTopLeftX > lastCenterPoint) {
-					canvasTopLeftX = lastCenterPoint;
-				}
-
-				var canvasTopLeftY = Math.max(Math.min(player.playerBottom() - gameHeight, 0), sceneHeight - gameHeight);
 				canvas.drawImage(background, canvasTopLeftX, canvasTopLeftY, gameWidth, gameHeight, 0, 0, gameWidth, gameHeight);
 			}
 
@@ -83,14 +84,14 @@ define(["player", "platform"], function(Player, Platform) {
 			player.render(canvas, sceneWidth, sceneHeight, gameWidth, gameHeight);
 
 			projectiles.forEach(function(projectile) {
-				canvas.fillStyle = "rgb(35,35,35)";
-				canvas.fillRect(projectile.projectileX, projectile.projectileY, 5, 2);
+				if(projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
+					canvas.fillStyle = "rgb(35,35,35)";
+					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 5, 2);
+				}
 			});
 		}
 
 		function renderDebug(canvas) {
-
-
 			canvas.font="12px Arial";
 			canvas.fillStyle = "rgb(0,0,0)";
 			canvas.fillText("PlayerX: " + player.playerLeft(), 0, 50);

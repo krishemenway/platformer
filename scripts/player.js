@@ -12,7 +12,7 @@ define([], function() {
 			playerY,
 			playerSpeed = 350,
 			playerJump = 500,
-			playerFallRate = 150,
+			playerFallRate = 500,
 			fireRate = 400,
 			jumpDuration = 500,
 			jumpKeyLastPressed = new Date(),
