@@ -1,6 +1,7 @@
-
-require(["game", "player", "platform"], function(game, player, platform) {
+/* globals require */
+require(["loop"], function(loop) {
+	"use strict";
+	
 	var canvas = document.getElementById("game");
-	var g = new game(canvas);
-	g.initialize();
+	loop.init(canvas);
 });

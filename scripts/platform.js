@@ -1,16 +1,23 @@
+/* globals define */
+define(function() {
+	"use strict";
 
-define([], function platform() {
-	return function platform(x, y, height, width) {
-		var p = this;
-		
-		p.height = height;
-		p.width = width;
-		
-		p.y = y;
-		p.x = x;
-		
-		p.image = new Image();
-		p.image_path = "images/platform_" + p.height + "_" + p.width + ".png";
-		p.image_loaded = false;
+	return function platform(platformData) {
+
+		var height = platformData.h, 
+			width = platformData.w,
+			top = platformData.y,
+			right = platformData.x + platformData.w,
+			bottom = platformData.y + platformData.h,
+			left = platformData.x;
+
+		function collidesWithVertically(objectTop, objectRight, objectBottom, objectLeft) {
+			return objectTop <= top && objectBottom >= top && objectRight >= left && objectLeft <= right;
+		}
+
+		return {
+			collidesWithVertically: collidesWithVertically
+		};
+
 	};
 });

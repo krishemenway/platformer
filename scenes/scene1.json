@@ -1,0 +1,9 @@
+{
+	background: "/images/level_1.jpg",
+	playerSprite: "/images/robot.png",
+	initialX: 0,
+	initialY: 0,
+	enemies: [
+		{ x: 0, y: 0 }
+	]
+}

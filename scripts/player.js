@@ -1,129 +1,155 @@
-
+/* globals define */
 define([], function() {
-	return function player(player_is_on_platform) {
-		var speed = 256, // movement in pixels per second
-			left_image,
-			right_image,
-			me = this,
-			jump_speed = 700,
-			jump_time = 2000, // in milliseconds
-			is_jumping = false,
-			image_loaded = false,
-			image,
-			x = 0,
-			y = 0;
-		
-		var height = function() {
-			if(image_loaded) {
-				return parseInt(image.height);
-			}
-			
-			return 0;
-		};
-		
-		var width = function() {
-			if(image_loaded) {
-				return parseInt(image.width);
-			}
-			
-			return 0;
+	"use strict";
+
+	return function player() {
+		var sprite,
+			spriteLoaded,
+			width,
+			height,
+			currentDirection,
+			playerX,
+			playerY,
+			playerSpeed = 350,
+			playerJump = 500,
+			playerFallRate = 150,
+			fireRate = 400,
+			jumpDuration = 500,
+			jumpKeyLastPressed = new Date(),
+			playerCanJump = false;
+
+		var direction = {
+			left: 50,
+			right: 0
 		};
 
-		var build_image_path = function(facing) {
-			return "images/robot-" + facing + ".png";
-		};
+		function center() {
+			return left() + width / 2;
+		}
 
-		var has_image_loaded = function() {
-			return image_loaded;
-		};
+		function right() {
+			return left() + width;
+		}
 
-		var get_x = function() {
-			return x;
-		};
+		function left() {
+			return playerX;
+		}
 
-		var get_y = function() {
-			return y;
-		};
-		
-		var jump = function() {
-			is_jumping = true;
-			setTimeout(function() {
-				is_jumping = false;
-			}, 350);
-		};
+		function top() {
+			return playerY;
+		}
 
-		var can_jump = function() {
-			return player_is_on_platform();
-		};
+		function bottom() {
+			return top() + height;
+		}
 
-		var handleJump = function(modifier) {
-			console.log(can_jump());
-			if(can_jump()) {
-				jump();
-			}
-		
-			if(is_jumping) {
-				y -= jump_speed * modifier;
-			}
-		};
+		function goLeft(timeSinceLastFrame) {
+			setDirection(direction.left);
+			playerX -= timeSinceLastFrame * playerSpeed;
+		}
 
-		var handleDuck = function(modifier) {
-			//y += modifier;
-		};
+		function goRight(timeSinceLastFrame) {
+			setDirection(direction.right);
+			playerX += timeSinceLastFrame * playerSpeed;
+		}
 
-		var goLeft = function(modifier) {
-			image = left_image;
-			if(x - modifier * speed > 0) {
-				x -= modifier * speed;
-			}
-		};
+		function setDirection(direction) {
+			currentDirection = direction;
+		}
 
-		var goRight = function(modifier) {
-			image = right_image;
-			x += modifier * speed;
-		};
+		function fall(timeSinceLastFrame) {
+			playerY += timeSinceLastFrame * playerFallRate;
+		}
 
-		var fall = function(amountToFall) {
-			var on_platform = player_is_on_platform();
+		function createNewProjectile() {
+			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
+				initialY = top() + 30,
+				projectileDirection = currentDirection === direction.left ? -1 : 1;
 
-			if(!on_platform) {
-				y += amountToFall;
-			} else {
-				y = on_platform;
-			}
-
-		};
-
-		var get_image = function() {
-			return image;
-		};
-
-		var initialize = function() {
-			left_image = new Image();
-			left_image.src = build_image_path("left");
-
-			right_image = new Image();
-			right_image.src = build_image_path("right");
-
-			image = right_image;
-			image.onload = function () {
-				image_loaded = true;
+			return {
+				projectileX: initialX,
+				projectileY: initialY,
+				velocity: 500 * projectileDirection
 			};
-		};
+		}
 
-		me.x = get_x;
-		me.y = get_y;
-		me.width = width;
-		me.height = height;
-		me.image = image;
-		me.speed = speed;
-		me.fall = fall;
-		me.goLeft = goLeft;
-		me.goRight = goRight;
-		me.get_image = get_image;
-		me.has_image_loaded = has_image_loaded;
-		me.handleDuck = handleDuck;
-		me.handleJump = handleJump;
-		me.initialize = initialize;
+		function render(canvas, sceneWidth, sceneHeight, gameWidth, gameHeight) {
+			if(spriteLoaded) {
+
+				var x = 0;
+
+				if(center() > sceneWidth - gameWidth / 2) {
+					x = sceneWidth - playerX;
+				} else if(center() <= gameWidth / 2) {
+					x = playerX;
+				} else {
+					x = gameWidth / 2 - width / 2;
+				}
+
+				if(window.debug) {
+					canvas.fillStyle = "rgb(255,0,0)";
+					canvas.fillRect(gameWidth / 2,0,1,10000);
+				}
+
+				canvas.drawImage(sprite, currentDirection, 0, width, height, x, playerY, width, height);
+			}
+		}
+
+		function setCanJump(canJump) {
+			playerCanJump = canJump;
+		}
+
+		function jump(timeSinceLastFrame) {
+			playerY += playerJump * timeSinceLastFrame;
+		}
+
+		function update(controller, timeSinceLastFrame) {
+
+			// if(controller.jumpKeyPressed() && new Date().getTime() > jumpKeyLastPressed + jumpDuration) {
+			// 	jumpKeyLastPressed = new Date().getTime();
+			// 	isJumping = true;
+			// }
+		}
+
+		function setPosition(newPlayerX, newPlayerY) {
+			playerX = newPlayerX;
+			playerY = newPlayerY;
+		}
+
+		function initializeSprite(pathToSprite) {
+			sprite = new Image();
+			spriteLoaded = false;
+
+			sprite.onload = function () {
+				spriteLoaded = true;
+				width = sprite.width / 2;
+				height = sprite.height;
+			};
+
+			sprite.src = pathToSprite;
+		}
+
+		function init(playerData) {
+			initializeSprite(playerData.playerSprite);
+			setDirection(direction.right);
+			setPosition(playerData.initialX, playerData.initialY);
+		}
+
+		return {
+			init: init,
+			update: update,
+			render: render,
+			setPosition: setPosition,
+			fall: fall,
+			goRight: goRight,
+			goLeft: goLeft,
+			playerBottom: bottom,
+			playerTop: top,
+			playerRight: right,
+			playerLeft: left,
+			playerCenter: center,
+			createNewProjectile: createNewProjectile,
+			fireRate: fireRate
+		};
 	};
 });
