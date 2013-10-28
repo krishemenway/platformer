@@ -76,7 +76,7 @@ define([], function() {
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
-				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top(), width, height);
+				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
 			}
 
 			if(window.debug) {

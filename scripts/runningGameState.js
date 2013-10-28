@@ -22,9 +22,9 @@ define(["scene"], function(Scene) {
 				playerData: {initialX: 30, initialY: 80, playerSprite: "/images/robot.png"},
 				platformData: [{x: 0, y: 380, w: 1600, h: 100}],
 				enemies: [
-					{initialX: 800, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100},
-					{initialX: 400, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100},
-					{initialX: 1300, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100}
+					{initialX: 800, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 75},
+					{initialX: 400, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 50},
+					{initialX: 1300, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 80}
 				]
 			});
 		}
