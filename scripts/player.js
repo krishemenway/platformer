@@ -11,11 +11,12 @@ define([], function() {
 			playerX,
 			playerY,
 			playerSpeed = 350,
-			playerJump = 500,
-			playerFallRate = 500,
+			playerJump = 250,
+			playerFallRate = 300,
 			fireRate = 400,
-			jumpDuration = 500,
-			jumpKeyLastPressed = new Date(),
+			isJumping = false,
+			jumpDuration = 50,
+			lastJumpTime = new Date().getTime(),
 			playerCanJump = false;
 
 		var direction = {
@@ -75,24 +76,45 @@ define([], function() {
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
-				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, playerY, width, height);
+				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top(), width, height);
 			}
+
+			if(window.debug) {
+				canvas.fillText("Can Jump: " + playerCanJump, 10, 150);
+				canvas.fillText("Is Jumping: " + isJumping, 10, 175);
+			}
+		}
+
+		function getIsJumping() {
+			return isJumping;
 		}
 
 		function setCanJump(canJump) {
 			playerCanJump = canJump;
+
+			if(!playerCanJump) {
+				isJumping = false;
+			}
 		}
 
 		function jump(timeSinceLastFrame) {
-			playerY += playerJump * timeSinceLastFrame;
+			playerY -= playerJump * timeSinceLastFrame;
 		}
 
 		function update(controller, timeSinceLastFrame) {
+			if(controller.jumpKeyIsPressed() && playerCanJump) {
+				lastJumpTime = new Date().getTime();
+				isJumping = true;
+			}
 
-			// if(controller.jumpKeyPressed() && new Date().getTime() > jumpKeyLastPressed + jumpDuration) {
-			// 	jumpKeyLastPressed = new Date().getTime();
-			// 	isJumping = true;
-			// }
+			if(isJumping && lastJumpTime + jumpDuration < new Date().getTime()) {
+				playerCanJump = false;
+				isJumping = false;
+			}
+
+			if(isJumping) {
+				jump(timeSinceLastFrame);
+			}
 		}
 
 		function setPosition(newPlayerX, newPlayerY) {
@@ -132,8 +154,10 @@ define([], function() {
 			playerRight: right,
 			playerLeft: left,
 			playerCenter: center,
+			playerIsJumping: getIsJumping,
 			createNewProjectile: createNewProjectile,
-			fireRate: fireRate
+			fireRate: fireRate,
+			setCanJump: setCanJump
 		};
 	};
 });

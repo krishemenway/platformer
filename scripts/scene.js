@@ -1,5 +1,5 @@
 /* globals define */
-define(["player", "platform"], function(Player, Platform) {
+define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 	"use strict";
 
 	return function scene() {
@@ -10,17 +10,20 @@ define(["player", "platform"], function(Player, Platform) {
 			gameWidth = 0,
 			gameHeight = 0,
 			lastTopLeftX,
+			canvasTopLeftX = 0,
+			canvasTopLeftY = 0,
 			player,
 			enemies = [],
 			platforms = [],
 			projectiles = [],
-			lastFiredTime;
+			lastFiredTime,
+			renderOrder = [];
 
-		function playerCollidesWithPlatformVertically() {
+		function platformsCollidesWithShape(objectTop, objectRight, objectBottom, objectLeft) {
 			var p;
 
 			for(p = 0; p <= platforms.length - 1; p++) {
-				if(platforms[p].collidesWithVertically(player.playerTop(), player.playerRight(), player.playerBottom(), player.playerLeft())) {
+				if(platforms[p].collidesWithVertically(objectTop, objectRight, objectBottom, objectLeft)) {
 					return true;
 				}
 			}
@@ -42,12 +45,29 @@ define(["player", "platform"], function(Player, Platform) {
 			});
 		}
 
-		function update(controller, timeSinceLastFrame) {
-			player.update(controller, timeSinceLastFrame);
+		function updateEnemies(timeSinceLastFrame) {
+			for(var e = 0; e < enemies.length; e++) {
+				var enemy = enemies[e];
 
-			if(!playerCollidesWithPlatformVertically()) {
-				player.fall(timeSinceLastFrame);
+				if(!platformsCollidesWithShape(enemy.enemyTop(), enemy.enemyRight(), enemy.enemyBottom(), enemy.enemyLeft())) {
+					enemy.fall(timeSinceLastFrame);
+				}
+				enemy.update(timeSinceLastFrame);
 			}
+		}
+
+		function update(controller, timeSinceLastFrame) {
+			canvasTopLeftX = Math.min(Math.max(player.playerCenter() - gameWidth / 2, 0), lastTopLeftX);
+			canvasTopLeftY = 0;
+
+			if(platformsCollidesWithShape(player.playerTop(), player.playerRight(), player.playerBottom(), player.playerLeft())) {
+				player.setCanJump(true);
+			} else if(!player.playerIsJumping()) {
+				player.fall(timeSinceLastFrame);
+				player.setCanJump(false);
+			}
+
+			player.update(controller, timeSinceLastFrame);
 
 			if(controller.leftKeyIsPressed() && player.playerLeft() >= 5) {
 				player.goLeft(timeSinceLastFrame);
@@ -59,58 +79,59 @@ define(["player", "platform"], function(Player, Platform) {
 				fireWeapon();
 			}
 
+			updateEnemies(timeSinceLastFrame);
 			updateProjectiles(timeSinceLastFrame);
 		}
 
-		function renderProjectiles(canvas, canvasTopLeftX, canvasTopLeftY) {
+		function renderProjectiles(canvas) {
 
 			for(var p = 0; p < projectiles.length; p++) {
 				var projectile = projectiles[p];
 
 				if(projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
 					canvas.fillStyle = "rgb(35,35,35)";
-					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 5, 2);
+					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 10,5);
 				} else {
 					projectiles.slice(p, 1);
 				}
 			}
 		}
 
-		function render(canvas) {
-			var canvasTopLeftX = player.playerCenter() - gameWidth / 2;
-			canvasTopLeftX = canvasTopLeftX > 0 ? canvasTopLeftX : 0;
-
-			if(canvasTopLeftX > lastTopLeftX) {
-				canvasTopLeftX = lastTopLeftX;
+		function renderBackground(canvas) {
+			if(backgroundLoaded) {
+				canvas.drawImage(background, canvasTopLeftX, canvasTopLeftY, gameWidth, gameHeight, 0, 0, gameWidth, gameHeight);
 			}
+		}
 
-			var canvasTopLeftY = Math.max(Math.min(player.playerBottom() - gameHeight, 0), sceneHeight - gameHeight);
+		function renderPlayer(canvas) {
+			player.render(canvas, canvasTopLeftX, canvasTopLeftY);
+		}
 
+		function renderEnemies(canvas) {
+			for(var e = 0; e < enemies.length; e++) {
+				enemies[e].render(canvas, canvasTopLeftX, canvasTopLeftY);
+			}
+		}
+
+		function renderDebug(canvas) {
+			canvas.font="12px Arial";
+			canvas.fillStyle = "rgb(0,0,0)";
+			canvas.fillText("PlayerX: " + player.playerLeft(), 10, 25);
+			canvas.fillText("PlayerY: " + player.playerTop(), 10, 50);
+			canvas.fillText("CanvasTopLeftX: " + canvasTopLeftX, 10, 75);
+			canvas.fillText("CanvasTopLeftY: " + canvasTopLeftY, 10, 100);
+			canvas.fillText("ProjectileCount: " + projectiles.length, 10, 125);
+		}
+
+		function render(canvas) {
 			if(!gameHeight || !gameWidth) {
 				gameHeight = canvas.canvas.height;
 				gameWidth = canvas.canvas.width;
 			}
 
-			if(backgroundLoaded) {
-				canvas.drawImage(background, canvasTopLeftX, canvasTopLeftY, gameWidth, gameHeight, 0, 0, gameWidth, gameHeight);
-			}
-
-			renderProjectiles(canvas, canvasTopLeftX, canvasTopLeftY);
-			player.render(canvas, canvasTopLeftX, canvasTopLeftY);
-
-			if(window.debug) {
-				renderDebug(canvas, canvasTopLeftX, canvasTopLeftY);
-			}
-		}
-
-		function renderDebug(canvas, canvasTopLeftX, canvasTopLeftY) {
-			canvas.font="12px Arial";
-			canvas.fillStyle = "rgb(0,0,0)";
-			canvas.fillText("PlayerX: " + player.playerLeft(), 0, 25);
-			canvas.fillText("PlayerY: " + player.playerTop(), 0, 50);
-			canvas.fillText("CanvasTopLeftX: " + canvasTopLeftX, 0, 75);
-			canvas.fillText("CanvasTopLeftY: " + canvasTopLeftY, 0, 100);
-			canvas.fillText("ProjectileCount: " + projectiles.length, 0, 125);
+			renderOrder.forEach(function(render) {
+				render(canvas);
+			});
 		}
 
 		function initializeBackground(backgroundSource) {
@@ -132,8 +153,15 @@ define(["player", "platform"], function(Player, Platform) {
 			player.init(playerData);
 		}
 
-		function initializeEnemies() {
-			enemies = [];
+		function initializeEnemies(enemyData) {
+			if(!enemyData)
+				return;
+
+			for(var e = 0; e < enemyData.length; e++) {
+				var enemy = new Enemy();
+				enemy.init(enemyData[e]);
+				enemies.push(enemy);
+			}
 		}
 
 		function initializePlatforms(platformData) {
@@ -145,8 +173,14 @@ define(["player", "platform"], function(Player, Platform) {
 		function init(sceneData) {
 			initializeBackground(sceneData.background);
 			initializePlayer(sceneData.playerData);
-			initializeEnemies();
+			initializeEnemies(sceneData.enemies);
 			initializePlatforms(sceneData.platformData);
+
+			renderOrder = [renderBackground, renderProjectiles, renderPlayer, renderEnemies];
+
+			if(window.debug) {
+				renderOrder.push(renderDebug);
+			}
 		}
 
 		return {

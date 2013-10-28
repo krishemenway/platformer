@@ -7,10 +7,10 @@ define(["startScreenState", "runningGameState", "exports"], function(startScreen
 		controller = {},
 		controls = {
 			startKey: 13,
-			leftKey: [97,37],
-			rightKey: [100,39],
+			leftKey: [65,37,100],
+			rightKey: [68,39,102],
 			fireKey: 32,
-			jumpKey: [119,38]
+			jumpKey: [87,38,104]
 		};
 
 	function controlIsActivated(control) {

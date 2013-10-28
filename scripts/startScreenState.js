@@ -5,7 +5,7 @@ define(["exports"], function(exports) {
 	var startGame;
 
 	function render(canvas) {
-		canvas.fillStyle = "rgb(35,35,35)";
+		canvas.fillStyle = "rgb(200,200,200)";
 		canvas.fillRect(0,0,10000,10000);
 
 		canvas.font="32px Arial";

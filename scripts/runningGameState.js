@@ -20,7 +20,12 @@ define(["scene"], function(Scene) {
 			currentScene.init({
 				background: "/images/level_1.jpg",
 				playerData: {initialX: 30, initialY: 80, playerSprite: "/images/robot.png"},
-				platformData: [{x: 0, y: 380, w: 1600, h: 100}]
+				platformData: [{x: 0, y: 380, w: 1600, h: 100}],
+				enemies: [
+					{initialX: 800, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100},
+					{initialX: 400, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100},
+					{initialX: 1300, initialY: 250, spriteSource: "/images/enemy.png", pace: true, paceDistance: 100}
+				]
 			});
 		}
 
