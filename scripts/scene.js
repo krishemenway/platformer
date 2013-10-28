@@ -15,8 +15,10 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			player,
 			enemies = [],
 			platforms = [],
-			projectiles = [],
-			lastFiredTime,
+			projectiles = {
+				player: [],
+				enemy: []
+			},
 			renderOrder = [];
 
 		function platformsCollidesWithShape(objectTop, objectRight, objectBottom, objectLeft) {
@@ -31,16 +33,11 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			return false;
 		}
 
-		function fireWeapon() {
-			if(lastFiredTime === undefined || new Date().getTime() > lastFiredTime + player.fireRate) {
-				var projectile = player.createNewProjectile();
-				projectiles.push(projectile);
-				lastFiredTime = new Date().getTime();
-			}
-		}
+		function updateProjectiles(timeSinceLastFrame, setOfProjectiles) {
+			setOfProjectiles.forEach(function(projectile) {
+				if(projectile === null)
+					return;
 
-		function updateProjectiles(timeSinceLastFrame) {
-			projectiles.forEach(function(projectile) {
 				projectile.projectileX += projectile.velocity * timeSinceLastFrame;
 			});
 		}
@@ -75,26 +72,27 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 				player.goRight(timeSinceLastFrame);
 			}
 
-			if(controller.fireKeyIsPressed()) {
-				fireWeapon();
-			}
-
 			updateEnemies(timeSinceLastFrame);
-			updateProjectiles(timeSinceLastFrame);
+			updateProjectiles(timeSinceLastFrame, projectiles.player);
+			updateProjectiles(timeSinceLastFrame, projectiles.enemy);
 		}
 
-		function renderProjectiles(canvas) {
+		function renderProjectileList(canvas, setOfProjectiles) {
+			for(var p = 0; p < setOfProjectiles.length; p++) {
+				var projectile = setOfProjectiles[p];
 
-			for(var p = 0; p < projectiles.length; p++) {
-				var projectile = projectiles[p];
-
-				if(projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
+				if(projectile !== null && projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
 					canvas.fillStyle = "rgb(35,35,35)";
 					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 10,5);
 				} else {
-					projectiles.slice(p, 1);
+					setOfProjectiles[p] = null;
 				}
 			}
+		}
+
+		function renderProjectiles(canvas) {
+			renderProjectileList(canvas, projectiles.player);
+			renderProjectileList(canvas, projectiles.enemy);
 		}
 
 		function renderBackground(canvas) {
@@ -116,11 +114,18 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 		function renderDebug(canvas) {
 			canvas.font="12px Arial";
 			canvas.fillStyle = "rgb(0,0,0)";
-			canvas.fillText("PlayerX: " + player.playerLeft(), 10, 25);
-			canvas.fillText("PlayerY: " + player.playerTop(), 10, 50);
-			canvas.fillText("CanvasTopLeftX: " + canvasTopLeftX, 10, 75);
-			canvas.fillText("CanvasTopLeftY: " + canvasTopLeftY, 10, 100);
-			canvas.fillText("ProjectileCount: " + projectiles.length, 10, 125);
+
+			var debugStatements = [
+				"Player X:" + parseInt(player.playerLeft(),10),
+				"Player Y:" + parseInt(player.playerTop(),10),
+				"Canvas TopLeft X: " + parseInt(canvasTopLeftX,10) + ", Y: " + parseInt(canvasTopLeftY,10),
+				"Player Projectiles: " + projectiles.player.length,
+				"Enemy Projectiles: " + projectiles.enemy.length
+			];
+
+			for(var d = 0; d < debugStatements.length; d++) {
+				canvas.fillText(debugStatements[d], 10, d * 12 + 12);
+			}
 		}
 
 		function render(canvas) {
@@ -150,7 +155,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function initializePlayer(playerData) {
 			player = new Player();
-			player.init(playerData);
+			player.init(playerData, projectiles);
 		}
 
 		function initializeEnemies(enemyData) {
@@ -159,12 +164,15 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 			for(var e = 0; e < enemyData.length; e++) {
 				var enemy = new Enemy();
-				enemy.init(enemyData[e]);
+				enemy.init(enemyData[e], player, projectiles);
 				enemies.push(enemy);
 			}
 		}
 
 		function initializePlatforms(platformData) {
+			if(!platformData)
+				return;
+
 			platformData.forEach(function(platform) {
 				platforms.push(new Platform(platform));
 			});

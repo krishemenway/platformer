@@ -11,11 +11,16 @@ define(function() {
 			height = 0,
 			sprite,
 			fallRate = 300,
-			enemySpeed = 350,
+			enemySpeed = 150,
 			spriteLoaded,
 			shouldPace,
 			paceDistance,
-			currentDirection;
+			currentDirection,
+			fireRate = 2500,
+			bulletSpeed = 300,
+			lastFiredTime = new Date().getTime(),
+			currentPlayer,
+			sceneProjectiles;
 
 		var direction = {
 			left: 50,
@@ -52,6 +57,35 @@ define(function() {
 			x += timeSinceLastFrame * enemySpeed;
 		}
 
+		function fireWeapon() {
+			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
+				initialY = top() + 50,
+				projectileDirection = currentDirection === direction.left ? -1 : 1;
+
+			var newProjectile = {
+				projectileX: initialX,
+				projectileY: initialY,
+				velocity: bulletSpeed * projectileDirection
+			};
+
+			lastFiredTime = new Date().getTime();
+			sceneProjectiles.enemy.push(newProjectile);
+		}
+
+		function fireIfReady() {
+			if(new Date().getTime() >= lastFiredTime + fireRate) {
+				fireWeapon();
+			}
+		}
+
+		function playerIsWithinSightInDirection(facingDireciton) {
+			if(facingDireciton === direction.left) {
+				return currentPlayer.playerRight() >= left() - 150;
+			} else {
+				return currentPlayer.playerLeft() >= right() + 150;
+			}
+		}
+
 		function pace(timeSinceLastFrame) {
 			if(!shouldPace)
 				return;
@@ -85,9 +119,12 @@ define(function() {
 			};
 		}
 
-
 		function update(timeSinceLastFrame) {
-			pace(timeSinceLastFrame);
+			if(playerIsWithinSightInDirection(currentDirection)) {
+				fireIfReady();
+			} else {
+				pace(timeSinceLastFrame);
+			}
 		}
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
@@ -109,13 +146,15 @@ define(function() {
 			sprite.src = pathToSprite;
 		}
 
-		function init(enemyData) {
+		function init(enemyData, player, projectiles) {
 			initializeSprite(enemyData.spriteSource);
 			setDirection(direction.left);
 			shouldPace = enemyData.pace || false;
 			paceDistance = enemyData.paceDistance || 200;
 			x = paceApex = enemyData.initialX;
 			y = enemyData.initialY;
+			currentPlayer = player;
+			sceneProjectiles = projectiles;
 		}
 
 		return {

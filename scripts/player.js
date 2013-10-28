@@ -14,10 +14,12 @@ define([], function() {
 			playerJump = 250,
 			playerFallRate = 300,
 			fireRate = 400,
+			lastFiredTime,
 			isJumping = false,
 			jumpDuration = 50,
 			lastJumpTime = new Date().getTime(),
-			playerCanJump = false;
+			playerCanJump = false,
+			sceneProjectiles;
 
 		var direction = {
 			left: 50,
@@ -62,26 +64,24 @@ define([], function() {
 			playerY += timeSinceLastFrame * playerFallRate;
 		}
 
-		function createNewProjectile() {
+		function fireWeapon() {
 			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
 				initialY = top() + 30,
 				projectileDirection = currentDirection === direction.left ? -1 : 1;
 
-			return {
+			var newProjectile = {
 				projectileX: initialX,
 				projectileY: initialY,
 				velocity: 900 * projectileDirection
 			};
+
+			lastFiredTime = new Date().getTime();
+			sceneProjectiles.player.push(newProjectile);
 		}
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
 				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
-			}
-
-			if(window.debug) {
-				canvas.fillText("Can Jump: " + playerCanJump, 10, 150);
-				canvas.fillText("Is Jumping: " + isJumping, 10, 175);
 			}
 		}
 
@@ -101,6 +101,12 @@ define([], function() {
 			playerY -= playerJump * timeSinceLastFrame;
 		}
 
+		function fireIfReady() {
+			if(lastFiredTime === undefined || new Date().getTime() > lastFiredTime + fireRate) {
+				fireWeapon();
+			}
+		}
+
 		function update(controller, timeSinceLastFrame) {
 			if(controller.jumpKeyIsPressed() && playerCanJump) {
 				lastJumpTime = new Date().getTime();
@@ -114,6 +120,10 @@ define([], function() {
 
 			if(isJumping) {
 				jump(timeSinceLastFrame);
+			}
+
+			if(controller.fireKeyIsPressed()) {
+				fireIfReady();
 			}
 		}
 
@@ -135,10 +145,11 @@ define([], function() {
 			sprite.src = pathToSprite;
 		}
 
-		function init(playerData) {
+		function init(playerData, projectiles) {
 			initializeSprite(playerData.playerSprite);
 			setDirection(direction.right);
 			setPosition(playerData.initialX, playerData.initialY);
+			sceneProjectiles = projectiles;
 		}
 
 		return {
@@ -155,7 +166,6 @@ define([], function() {
 			playerLeft: left,
 			playerCenter: center,
 			playerIsJumping: getIsJumping,
-			createNewProjectile: createNewProjectile,
 			fireRate: fireRate,
 			setCanJump: setCanJump
 		};
