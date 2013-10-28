@@ -1,4 +1,3 @@
-
 /* globals define */
 define(function() {
 	"use strict";
@@ -66,6 +65,8 @@ define(function() {
 			var newProjectile = {
 				projectileX: initialX,
 				projectileY: initialY,
+				width: 20,
+				height: 3,
 				velocity: bulletSpeed * projectileDirection
 			};
 
@@ -77,6 +78,10 @@ define(function() {
 			if(new Date().getTime() >= lastFiredTime + fireRate) {
 				fireWeapon();
 			}
+		}
+
+		function isDestroyed() {
+			return destroyed;
 		}
 
 		function playerIsWithinSightInDirection(facingDireciton) {
@@ -127,7 +132,8 @@ define(function() {
 				if(projectile === null)
 					continue;
 
-				if(projectile.projectileX + projectile.width > left() && projectile.projectileX < right()) {
+				if(projectile.projectileX + projectile.width > left() && projectile.projectileX < right()
+					&& projectile.projectileY + projectile.height > top() && projectile.projectileY <= bottom()) {
 					sceneProjectiles.player[p] = null;
 					return true;
 				}
@@ -188,7 +194,8 @@ define(function() {
 			enemyTop: top,
 			enemyRight: right,
 			enemyBottom: bottom,
-			createNewProjectile: createNewProjectile
+			createNewProjectile: createNewProjectile,
+			isDestroyed: isDestroyed
 		};
 	};
 });

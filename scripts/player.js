@@ -19,7 +19,8 @@ define([], function() {
 			jumpDuration = 50,
 			lastJumpTime = new Date().getTime(),
 			playerCanJump = false,
-			sceneProjectiles;
+			sceneProjectiles,
+			scenePlatforms;
 
 		var direction = {
 			left: 50,
@@ -110,6 +111,13 @@ define([], function() {
 		}
 
 		function update(controller, timeSinceLastFrame) {
+
+			if(controller.leftKeyIsPressed() && left() >= 5) {
+				goLeft(timeSinceLastFrame);
+			} else if(controller.rightKeyIsPressed()) {
+				goRight(timeSinceLastFrame);
+			}
+
 			if(controller.jumpKeyIsPressed() && playerCanJump) {
 				lastJumpTime = new Date().getTime();
 				isJumping = true;
@@ -147,11 +155,12 @@ define([], function() {
 			sprite.src = pathToSprite;
 		}
 
-		function init(playerData, projectiles) {
+		function init(playerData, projectiles, platforms) {
 			initializeSprite(playerData.playerSprite);
 			setDirection(direction.right);
 			setPosition(playerData.initialX, playerData.initialY);
 			sceneProjectiles = projectiles;
+			scenePlatforms = platforms;
 		}
 
 		return {
@@ -160,15 +169,12 @@ define([], function() {
 			render: render,
 			setPosition: setPosition,
 			fall: fall,
-			goRight: goRight,
-			goLeft: goLeft,
 			playerBottom: bottom,
 			playerTop: top,
 			playerRight: right,
 			playerLeft: left,
 			playerCenter: center,
 			playerIsJumping: getIsJumping,
-			fireRate: fireRate,
 			setCanJump: setCanJump
 		};
 	};

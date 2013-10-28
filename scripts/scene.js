@@ -33,7 +33,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			return false;
 		}
 
-		function updateProjectiles(timeSinceLastFrame, setOfProjectiles) {
+		function updateProjectileList(timeSinceLastFrame, setOfProjectiles) {
 			setOfProjectiles.forEach(function(projectile) {
 				if(projectile === null)
 					return;
@@ -42,15 +42,32 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			});
 		}
 
+		function updateProjectiles(timeSinceLastFrame) {
+			updateProjectileList(timeSinceLastFrame, projectiles.player);
+			updateProjectileList(timeSinceLastFrame, projectiles.enemy);
+		}
+
 		function updateEnemies(timeSinceLastFrame) {
 			for(var e = 0; e < enemies.length; e++) {
 				var enemy = enemies[e];
 
+				if(enemy === null)
+					continue;
+
 				if(!platformsCollidesWithShape(enemy.enemyTop(), enemy.enemyRight(), enemy.enemyBottom(), enemy.enemyLeft())) {
 					enemy.fall(timeSinceLastFrame);
 				}
+
 				enemy.update(timeSinceLastFrame);
+
+				if(enemy.isDestroyed()) {
+					enemies[e] = null;
+				}
 			}
+		}
+
+		function updatePlayer(controller, timeSinceLastFrame) {
+			player.update(controller, timeSinceLastFrame);
 		}
 
 		function update(controller, timeSinceLastFrame) {
@@ -64,17 +81,9 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 				player.setCanJump(false);
 			}
 
-			player.update(controller, timeSinceLastFrame);
-
-			if(controller.leftKeyIsPressed() && player.playerLeft() >= 5) {
-				player.goLeft(timeSinceLastFrame);
-			} else if(controller.rightKeyIsPressed() && player.playerRight() <= sceneWidth - 5) {
-				player.goRight(timeSinceLastFrame);
-			}
-
+			updateProjectiles(timeSinceLastFrame);
+			updatePlayer(controller, timeSinceLastFrame);
 			updateEnemies(timeSinceLastFrame);
-			updateProjectiles(timeSinceLastFrame, projectiles.player);
-			updateProjectiles(timeSinceLastFrame, projectiles.enemy);
 		}
 
 		function renderProjectileList(canvas, setOfProjectiles) {
@@ -107,6 +116,9 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function renderEnemies(canvas) {
 			for(var e = 0; e < enemies.length; e++) {
+				if(enemies[e] === null)
+					continue;
+
 				enemies[e].render(canvas, canvasTopLeftX, canvasTopLeftY);
 			}
 		}
@@ -155,7 +167,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function initializePlayer(playerData) {
 			player = new Player();
-			player.init(playerData, projectiles);
+			player.init(playerData, projectiles, platforms);
 		}
 
 		function initializeEnemies(enemyData) {
@@ -180,9 +192,9 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function init(sceneData) {
 			initializeBackground(sceneData.background);
+			initializePlatforms(sceneData.platformData);
 			initializePlayer(sceneData.playerData);
 			initializeEnemies(sceneData.enemies);
-			initializePlatforms(sceneData.platformData);
 
 			renderOrder = [renderBackground, renderProjectiles, renderPlayer, renderEnemies];
 
