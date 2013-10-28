@@ -83,7 +83,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 				if(projectile !== null && projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
 					canvas.fillStyle = "rgb(35,35,35)";
-					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, 10,5);
+					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, projectile.width, projectile.height);
 				} else {
 					setOfProjectiles[p] = null;
 				}

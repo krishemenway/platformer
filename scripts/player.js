@@ -72,6 +72,8 @@ define([], function() {
 			var newProjectile = {
 				projectileX: initialX,
 				projectileY: initialY,
+				height: 5,
+				width: 10,
 				velocity: 900 * projectileDirection
 			};
 

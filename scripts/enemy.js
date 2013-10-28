@@ -19,6 +19,7 @@ define(function() {
 			fireRate = 2500,
 			bulletSpeed = 300,
 			lastFiredTime = new Date().getTime(),
+			destroyed,
 			currentPlayer,
 			sceneProjectiles;
 
@@ -119,7 +120,27 @@ define(function() {
 			};
 		}
 
+		function isCollidingWithPlayerProjectile() {
+			for(var p = 0; p < sceneProjectiles.player.length; p++) {
+				var projectile = sceneProjectiles.player[p];
+
+				if(projectile === null)
+					continue;
+
+				if(projectile.projectileX + projectile.width > left() && projectile.projectileX < right()) {
+					sceneProjectiles.player[p] = null;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		function update(timeSinceLastFrame) {
+			if(isCollidingWithPlayerProjectile()) {
+				destroyed = true;
+			}
+
 			if(playerIsWithinSightInDirection(currentDirection)) {
 				fireIfReady();
 			} else {
@@ -128,7 +149,7 @@ define(function() {
 		}
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
-			if(spriteLoaded) {
+			if(spriteLoaded && !destroyed) {
 				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
 			}
 		}
@@ -155,6 +176,7 @@ define(function() {
 			y = enemyData.initialY;
 			currentPlayer = player;
 			sceneProjectiles = projectiles;
+			destroyed = false;
 		}
 
 		return {
