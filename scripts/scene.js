@@ -2,7 +2,7 @@
 define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 	"use strict";
 
-	return function scene() {
+	return function scene(sceneData) {
 		var background,
 			backgroundLoaded,
 			sceneWidth = 0,
@@ -190,7 +190,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			});
 		}
 
-		function init(sceneData) {
+		function init() {
 			initializeBackground(sceneData.background);
 			initializePlatforms(sceneData.platformData);
 			initializePlayer(sceneData.playerData);

@@ -1,51 +1,45 @@
-/* globals define */
-define(["scene"], function(Scene) {
+/* globals define,$ */
+define(["scene", "snack"], function(Scene) {
 	"use strict";
 
 	return function runningGameState() {
 
 		var scenes,
+			scenePaths = ["scenes/scene1.json"],
 			currentScene;
 
 		function update(controller, timeSinceLastFrame) {
-			currentScene.update(controller, timeSinceLastFrame);
+			if(currentScene)
+				currentScene.update(controller, timeSinceLastFrame);
 		}
 
 		function render(canvas) {
-			currentScene.render(canvas);
+			if(currentScene)
+				currentScene.render(canvas);
 		}
 
 		function setScene(sceneNumber) {
 			currentScene = scenes[sceneNumber];
-			currentScene.init({
-				background: "images/level_1.jpg",
-				playerData: {initialX: 30, initialY: 80, playerSprite: "images/robot.png"},
-				platformData: [
-					{x: 0, y: 380, w: 1600, h: 100},
-					{x: 300, y: 100, w: 600, h: 100},
-				],
-				enemies: [
-					{initialX: 800, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 75},
-					{initialX: 400, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 50},
-					{initialX: 750, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 80},
-					{initialX: 1000, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 75},
-					{initialX: 50, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 50},
-					{initialX: 250, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 50},
-					{initialX: 100, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 50},
-					{initialX: 1300, initialY: 250, spriteSource: "images/enemy.png", pace: true, paceDistance: 80}
-				]
-			});
+			currentScene.init();
+		}
+
+		function loadScene(error, response) {
+			scenes.push(new Scene(snack.parseJSON(response)));
+
+			if(scenes.length === 1)
+				setScene(0);
 		}
 
 		function initializeScenes() {
-			scenes = [
-				new Scene()
-			];
+			scenes = [];
+
+			scenePaths.forEach(function(scenePath) {
+				snack.request({url: "scenes/scene1.json"}, loadScene);
+			});
 		}
 
 		function init() {
 			initializeScenes();
-			setScene(0);
 		}
 
 		return {
