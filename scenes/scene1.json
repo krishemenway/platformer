@@ -1,9 +1,15 @@
 {
-	background: "/images/level_1.jpg",
-	playerSprite: "/images/robot.png",
-	initialX: 0,
-	initialY: 0,
-	enemies: [
-		{ x: 0, y: 0 }
+	"background": "images/level_1.jpg",
+	"playerData": {"initialX": 30, "initialY": 80, "playerSprite": "images/robot.png"},
+	"platformData": [
+		{"x": 0, "y": 380, "w": 1600, "h": 100},
+		{"x": 300, "y": 100, "w": 600, "h": 100}
+	],
+	"enemies": [
+		{"initialX": 800, "initialY": 250, "spriteSource": "images/enemy.png", "pace": true, "paceDistance": 75},
+		{"initialX": 400, "initialY": 250, "spriteSource": "images/enemy.png", "pace": true, "paceDistance": 50},
+		{"initialX": 750, "initialY": 250, "spriteSource": "images/enemy.png", "pace": true, "paceDistance": 80},
+		{"initialX": 1000, "initialY": 250, "spriteSource": "images/enemy.png", "pace": true, "paceDistance": 75},
+		{"initialX": 1300, "initialY": 250, "spriteSource": "images/enemy.png", "pace": true, "paceDistance": 80}
 	]
 }
