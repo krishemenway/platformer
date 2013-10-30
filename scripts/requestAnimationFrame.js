@@ -1,4 +1,4 @@
-/* globals require,window */
+/* globals define,window */
 define(function() {
 	"use strict";
 
@@ -11,5 +11,5 @@ define(function() {
 			return function(callback) {
 				window.setTimeout(callback, 1000 / 60);
 			};
-	}
+	};
 });

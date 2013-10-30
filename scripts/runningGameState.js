@@ -1,11 +1,11 @@
-/* globals define,$ */
+/* globals define,snack */
 define(["scene", "snack"], function(Scene) {
 	"use strict";
 
 	return function runningGameState() {
 
 		var scenes,
-			scenePaths = ["scenes/scene1.json"],
+			sceneCount = 1,
 			currentScene;
 
 		function update(controller, timeSinceLastFrame) {
@@ -33,9 +33,9 @@ define(["scene", "snack"], function(Scene) {
 		function initializeScenes() {
 			scenes = [];
 
-			scenePaths.forEach(function(scenePath) {
-				snack.request({url: "scenes/scene1.json"}, loadScene);
-			});
+			for(var s = 1; s <= sceneCount; s++) {
+				snack.request({url: "scenes/scene" + s + ".json"}, loadScene);
+			}
 		}
 
 		function init() {

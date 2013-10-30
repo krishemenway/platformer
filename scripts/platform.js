@@ -4,11 +4,11 @@ define(function() {
 
 	return function platform(platformData) {
 
-		var height = platformData.h, 
+		var height = platformData.h,
 			width = platformData.w,
 			top = platformData.y,
-			right = platformData.x + platformData.w,
-			bottom = platformData.y + platformData.h,
+			right = platformData.x + width,
+			bottom = platformData.y + height,
 			left = platformData.x;
 
 		function collidesWithVertically(objectTop, objectRight, objectBottom, objectLeft) {
