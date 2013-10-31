@@ -138,6 +138,14 @@ define([], function() {
 			if(controller.fireKeyIsPressed()) {
 				fireIfReady();
 			}
+
+			cleanupProjectiles();
+		}
+
+		function cleanupProjectiles() {
+			if(lastFiredTime + 4000 <= new Date().getTime()) {
+				sceneProjectiles.player = [];
+			}
 		}
 
 		function setPosition(newPlayerX, newPlayerY) {
