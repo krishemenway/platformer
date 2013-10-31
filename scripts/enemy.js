@@ -99,11 +99,19 @@ define(function() {
 			return currentPlayer.playerBottom() > top() && currentPlayer.playerTop() < bottom();
 		}
 
+		function playerIsInSightOnRight() {
+			return currentPlayer.playerLeft() <= right() + sightDistance && currentPlayer.playerLeft() > right();
+		}
+
+		function playerIsInSightOnLeft() {
+			return currentPlayer.playerRight() >= left() - sightDistance && currentPlayer.playerRight() < left();
+		}
+
 		function playerIsWithinSight() {
 			if(currentDirection === direction.left) {
-				return currentPlayer.playerRight() >= left() - sightDistance && currentPlayer.playerRight() < left()  && playerIsWithinSightVertically();
+				return playerIsInSightOnLeft() && playerIsWithinSightVertically();
 			} else {
-				return currentPlayer.playerLeft() <= right() + sightDistance && currentPlayer.playerLeft() > right() && playerIsWithinSightVertically();
+				return playerIsInSightOnRight() && playerIsWithinSightVertically();
 			}
 		}
 
