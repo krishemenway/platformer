@@ -15,9 +15,12 @@ define(function() {
 			shouldPace,
 			paceDistance,
 			currentDirection,
+			shouldAutoFire = false,
 			fireRate = 2500,
 			bulletSpeed = 300,
+			sightDistance = 150,
 			lastFiredTime = new Date().getTime(),
+			projectileOffset = 50,
 			destroyed,
 			currentPlayer,
 			sceneProjectiles;
@@ -57,9 +60,17 @@ define(function() {
 			x += timeSinceLastFrame * enemySpeed;
 		}
 
+		function getProjectileX() {
+			return (currentDirection === direction.left ? left() - 2 : right() + 2);
+		}
+
+		function getProjectileY() {
+			return top() + projectileOffset;
+		}
+
 		function fireWeapon() {
-			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
-				initialY = top() + 50,
+			var initialX = getProjectileX(),
+				initialY = getProjectileY(),
 				projectileDirection = currentDirection === direction.left ? -1 : 1;
 
 			var newProjectile = {
@@ -84,11 +95,15 @@ define(function() {
 			return destroyed;
 		}
 
-		function playerIsWithinSightInDirection(facingDireciton) {
-			if(facingDireciton === direction.left) {
-				return currentPlayer.playerRight() >= left() - 150;
+		function playerIsWithinSightVertically() {
+			return currentPlayer.playerBottom() > top() && currentPlayer.playerTop() < bottom();
+		}
+
+		function playerIsWithinSight() {
+			if(currentDirection === direction.left) {
+				return currentPlayer.playerRight() >= left() - sightDistance && currentPlayer.playerRight() < left()  && playerIsWithinSightVertically();
 			} else {
-				return currentPlayer.playerLeft() >= right() + 150;
+				return currentPlayer.playerLeft() <= right() + sightDistance && currentPlayer.playerLeft() > right() && playerIsWithinSightVertically();
 			}
 		}
 
@@ -147,7 +162,7 @@ define(function() {
 				destroyed = true;
 			}
 
-			if(playerIsWithinSightInDirection(currentDirection)) {
+			if(playerIsWithinSight() || shouldAutoFire) {
 				fireIfReady();
 			} else {
 				pace(timeSinceLastFrame);
@@ -176,6 +191,7 @@ define(function() {
 		function init(enemyData, player, projectiles) {
 			initializeSprite(enemyData.spriteSource);
 			setDirection(direction.left);
+			shouldAutoFire = enemyData.shouldAutoFire || false;
 			shouldPace = enemyData.pace || false;
 			paceDistance = enemyData.paceDistance || 200;
 			x = paceApex = enemyData.initialX;
