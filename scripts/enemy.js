@@ -1,5 +1,5 @@
 /* globals define */
-define(function() {
+define(["projectile"], function(Projectile) {
 	"use strict";
 
 	return function enemy() {
@@ -71,18 +71,11 @@ define(function() {
 		function fireWeapon() {
 			var initialX = getProjectileX(),
 				initialY = getProjectileY(),
-				projectileDirection = currentDirection === direction.left ? -1 : 1;
-
-			var newProjectile = {
-				projectileX: initialX,
-				projectileY: initialY,
-				width: 20,
-				height: 3,
-				velocity: bulletSpeed * projectileDirection
-			};
+				projectileDirection = currentDirection === direction.left ? -1 : 1,
+				projectile = new Projectile(initialX, initialY, 10 , 3, bulletSpeed * projectileDirection);
 
 			lastFiredTime = new Date().getTime();
-			sceneProjectiles.enemy.push(newProjectile);
+			sceneProjectiles.enemy.push(projectile);
 		}
 
 		function fireIfReady() {
@@ -136,28 +129,12 @@ define(function() {
 			y += timeSinceLastFrame * fallRate;
 		}
 
-		function createNewProjectile() {
-			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
-				initialY = top() + 30,
-				projectileDirection = currentDirection === direction.left ? -1 : 1;
-
-			return {
-				projectileX: initialX,
-				projectileY: initialY,
-				velocity: 900 * projectileDirection
-			};
-		}
-
 		function isCollidingWithPlayerProjectile() {
 			for(var p = 0; p < sceneProjectiles.player.length; p++) {
 				var projectile = sceneProjectiles.player[p];
 
-				if(projectile === null)
-					continue;
-
-				if(projectile.projectileX + projectile.width > left() && projectile.projectileX < right()
-					&& projectile.projectileY + projectile.height > top() && projectile.projectileY <= bottom()) {
-					sceneProjectiles.player[p] = null;
+				if(projectile.collidesWith(top(), right(), bottom(), left())) {
+					projectile.destroy();
 					return true;
 				}
 			}
@@ -166,8 +143,12 @@ define(function() {
 		}
 
 		function update(timeSinceLastFrame) {
+			if(destroyed)
+				return;
+
 			if(isCollidingWithPlayerProjectile()) {
 				destroyed = true;
+				return;
 			}
 
 			if(playerIsWithinSight() || shouldAutoFire) {
@@ -218,7 +199,6 @@ define(function() {
 			enemyTop: top,
 			enemyRight: right,
 			enemyBottom: bottom,
-			createNewProjectile: createNewProjectile,
 			isDestroyed: isDestroyed
 		};
 	};

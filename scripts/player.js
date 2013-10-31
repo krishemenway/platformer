@@ -1,5 +1,5 @@
 /* globals define */
-define([], function() {
+define(["projectile"], function(Projectile) {
 	"use strict";
 
 	return function player() {
@@ -66,16 +66,10 @@ define([], function() {
 				initialY = top() + 30,
 				projectileDirection = currentDirection === direction.left ? -1 : 1;
 
-			var newProjectile = {
-				projectileX: initialX,
-				projectileY: initialY,
-				height: 5,
-				width: 10,
-				velocity: 900 * projectileDirection
-			};
+			var projectile = new Projectile(initialX, initialY, 10, 5, 900 * projectileDirection);
 
 			lastFiredTime = new Date().getTime();
-			sceneProjectiles.player.push(newProjectile);
+			sceneProjectiles.player.push(projectile);
 		}
 
 		function renderDebug(canvas) {

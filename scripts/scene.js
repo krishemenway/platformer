@@ -36,10 +36,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function updateProjectileList(timeSinceLastFrame, setOfProjectiles) {
 			setOfProjectiles.forEach(function(projectile) {
-				if(projectile === null)
-					return;
-
-				projectile.projectileX += projectile.velocity * timeSinceLastFrame;
+				projectile.update(timeSinceLastFrame);
 			});
 		}
 
@@ -60,10 +57,6 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 				}
 
 				enemy.update(timeSinceLastFrame);
-
-				if(enemy.isDestroyed()) {
-					enemies[e] = null;
-				}
 			}
 		}
 
@@ -75,10 +68,6 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			canvasTopLeftX = Math.min(Math.max(player.playerCenter() - gameWidth / 2, 0), lastTopLeftX);
 			canvasTopLeftY = 0;
 
-			if(platformsCollidesWithShape(player.playerTop(), player.playerRight(), player.playerBottom(), player.playerLeft())) {
-				//player.setCanJump(true);
-			}
-
 			updateProjectiles(timeSinceLastFrame);
 			updatePlayer(controller, timeSinceLastFrame);
 			updateEnemies(timeSinceLastFrame);
@@ -86,14 +75,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function renderProjectileList(canvas, setOfProjectiles) {
 			for(var p = 0; p < setOfProjectiles.length; p++) {
-				var projectile = setOfProjectiles[p];
-
-				if(projectile !== null && projectile.projectileX > canvasTopLeftX && projectile.projectileX <= canvasTopLeftX + gameWidth) {
-					canvas.fillStyle = "rgb(35,35,35)";
-					canvas.fillRect(projectile.projectileX - canvasTopLeftX, projectile.projectileY - canvasTopLeftY, projectile.width, projectile.height);
-				} else {
-					setOfProjectiles[p] = null;
-				}
+				setOfProjectiles[p].render(canvas, canvasTopLeftX, canvasTopLeftY);
 			}
 		}
 
@@ -121,7 +103,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			}
 		}
 
-		function renderGrid() {
+		function renderGrid(canvas) {
 			for(var gx = 0; gx <= gameWidth; gx += gridSize) {
 				canvas.fillRect(0, gx, gameWidth, 1);
 			}
