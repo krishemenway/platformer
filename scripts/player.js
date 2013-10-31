@@ -15,7 +15,7 @@ define(["projectile"], function(Projectile) {
 			fireRate = 400,
 			lastFiredTime,
 			isJumping = false,
-			friction = .92,
+			friction = 0.92,
 			gravity = 15,
 			velocityX = 0,
 			velocityY = 100,
@@ -73,7 +73,7 @@ define(["projectile"], function(Projectile) {
 		}
 
 		function renderDebug(canvas) {
-			canvas.fillText("Velocity X: " + parseInt(velocityX,10) + " Y:" + parseInt(velocityY), 10, 72);
+			canvas.fillText("Velocity X: " + parseInt(velocityX,10) + " Y:" + parseInt(velocityY, 10), 10, 72);
 			canvas.fillText("IsJumping: " + isJumping, 10, 84);
 		}
 
