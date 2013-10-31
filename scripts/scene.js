@@ -9,6 +9,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			sceneHeight = 0,
 			gameWidth = 0,
 			gameHeight = 0,
+			gridSize = 64,
 			lastTopLeftX,
 			canvasTopLeftX = 0,
 			canvasTopLeftY = 0,
@@ -75,10 +76,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			canvasTopLeftY = 0;
 
 			if(platformsCollidesWithShape(player.playerTop(), player.playerRight(), player.playerBottom(), player.playerLeft())) {
-				player.setCanJump(true);
-			} else if(!player.playerIsJumping()) {
-				player.fall(timeSinceLastFrame);
-				player.setCanJump(false);
+				//player.setCanJump(true);
 			}
 
 			updateProjectiles(timeSinceLastFrame);
@@ -120,6 +118,16 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 					continue;
 
 				enemies[e].render(canvas, canvasTopLeftX, canvasTopLeftY);
+			}
+		}
+
+		function renderGrid() {
+			for(var gx = 0; gx <= gameWidth; gx += gridSize) {
+				canvas.fillRect(0, gx, gameWidth, 1);
+			}
+
+			for(var gy = 0; gy <= gameWidth; gy += gridSize) {
+				canvas.fillRect(gy, 0, 1, gameHeight);
 			}
 		}
 
@@ -200,6 +208,10 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 			if(window.debug) {
 				renderOrder.push(renderDebug);
+			}
+
+			if(window.showGrid) {
+				renderOrder.push(renderGrid);
 			}
 		}
 

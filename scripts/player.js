@@ -8,17 +8,17 @@ define([], function() {
 			width,
 			height,
 			currentDirection,
-			playerX,
-			playerY,
-			playerSpeed = 350,
-			playerJump = 250,
-			playerFallRate = 300,
+			playerX = 0,
+			playerY = 0,
+			playerRunSpeed = 1500,
+			playerJumpSpeed = 350,
 			fireRate = 400,
 			lastFiredTime,
 			isJumping = false,
-			jumpDuration = 50,
-			lastJumpTime = new Date().getTime(),
-			playerCanJump = false,
+			friction = .92,
+			gravity = 15,
+			velocityX = 0,
+			velocityY = 100,
 			sceneProjectiles,
 			scenePlatforms;
 
@@ -49,20 +49,16 @@ define([], function() {
 
 		function goLeft(timeSinceLastFrame) {
 			setDirection(direction.left);
-			playerX -= timeSinceLastFrame * playerSpeed;
+			velocityX -= playerRunSpeed * timeSinceLastFrame;
 		}
 
 		function goRight(timeSinceLastFrame) {
 			setDirection(direction.right);
-			playerX += timeSinceLastFrame * playerSpeed;
+			velocityX += playerRunSpeed * timeSinceLastFrame;
 		}
 
 		function setDirection(direction) {
 			currentDirection = direction;
-		}
-
-		function fall(timeSinceLastFrame) {
-			playerY += timeSinceLastFrame * playerFallRate;
 		}
 
 		function fireWeapon() {
@@ -82,32 +78,36 @@ define([], function() {
 			sceneProjectiles.player.push(newProjectile);
 		}
 
+		function renderDebug(canvas) {
+			canvas.fillText("Velocity X: " + parseInt(velocityX,10) + " Y:" + parseInt(velocityY), 10, 72);
+			canvas.fillText("IsJumping: " + isJumping, 10, 84);
+		}
+
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
 				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
 			}
-		}
 
-		function getIsJumping() {
-			return isJumping;
-		}
-
-		function setCanJump(canJump) {
-			playerCanJump = canJump;
-
-			if(!playerCanJump) {
-				isJumping = false;
+			if(window.debug) {
+				renderDebug(canvas);
 			}
 		}
 
-		function jump(timeSinceLastFrame) {
-			playerY -= playerJump * timeSinceLastFrame;
+		function jump() {
+			if(!isJumping) {
+				isJumping = true;
+				velocityY = -playerJumpSpeed;
+			}
 		}
 
 		function fireIfReady() {
 			if(lastFiredTime === undefined || new Date().getTime() > lastFiredTime + fireRate) {
 				fireWeapon();
 			}
+		}
+
+		function isStandingOnPlatform(timeSinceLastFrame) {
+			return playerY + velocityY * timeSinceLastFrame > 293;
 		}
 
 		function update(controller, timeSinceLastFrame) {
@@ -118,19 +118,22 @@ define([], function() {
 				goRight(timeSinceLastFrame);
 			}
 
-			if(controller.jumpKeyIsPressed() && playerCanJump) {
-				lastJumpTime = new Date().getTime();
-				isJumping = true;
+			if(controller.jumpKeyIsPressed()) {
+				jump();
 			}
 
-			if(isJumping && lastJumpTime + jumpDuration < new Date().getTime()) {
-				playerCanJump = false;
+			velocityX *= friction;
+			velocityY += gravity;
+
+			if(isStandingOnPlatform(timeSinceLastFrame)) {
 				isJumping = false;
+			} else {
+				playerY += velocityY * timeSinceLastFrame;
 			}
-
-			if(isJumping) {
-				jump(timeSinceLastFrame);
-			}
+		    
+		    if(playerX + velocityX * timeSinceLastFrame > 0) {
+				playerX += velocityX * timeSinceLastFrame;
+		    }
 
 			if(controller.fireKeyIsPressed()) {
 				fireIfReady();
@@ -168,14 +171,11 @@ define([], function() {
 			update: update,
 			render: render,
 			setPosition: setPosition,
-			fall: fall,
 			playerBottom: bottom,
 			playerTop: top,
 			playerRight: right,
 			playerLeft: left,
-			playerCenter: center,
-			playerIsJumping: getIsJumping,
-			setCanJump: setCanJump
+			playerCenter: center
 		};
 	};
 });
