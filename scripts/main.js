@@ -6,4 +6,5 @@ require(["loop"], function(loop) {
 	loop.init(canvas);
 
 	window.debug = true;
+	window.showGrid = true;
 });
