@@ -123,7 +123,7 @@ define([], function() {
 			}
 
 			velocityX *= friction;
-			velocityY += gravity;
+			velocityY += gravity + velocityY < 1500 ? gravity : 0;
 
 			if(isStandingOnPlatform(timeSinceLastFrame)) {
 				isJumping = false;
