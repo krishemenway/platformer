@@ -30,8 +30,12 @@ define(["class"], function() {
 			}
 		},
 
-		update: function(timeSinceLastFrame) {
+		moveProjectile: function(timeSinceLastFrame) {
 			this.x += this.velocity * timeSinceLastFrame;
+		},
+
+		update: function(timeSinceLastFrame) {
+			this.moveProjectile(timeSinceLastFrame);
 		},
 
 		init: function(initialX, initialY, width, height, initialVelocity) {
