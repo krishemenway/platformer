@@ -1,10 +1,10 @@
 /* globals define */
-define(["weapon"], function(Weapon) {
+define(["weapons/weapon", "weapons/arcWeapon", "weapons/dualArcWeapon"], function(Weapon, ArcWeapon, DualArcWeapon) {
 	var sceneProjectiles,
 		weapons = {
 			straight: straight,
 			arc: arc,
-			grenade: grenade
+			dualArc: dualArc
 		};
 
 	function straight(weaponOwner) {
@@ -12,11 +12,11 @@ define(["weapon"], function(Weapon) {
 	}
 
 	function arc(weaponOwner) {
-		return new Weapon("arc", sceneProjectiles, weaponOwner);
+		return new ArcWeapon(sceneProjectiles, weaponOwner);
 	}
 
-	function grenade(weaponOwner) {
-		return new Weapon("grenade", sceneProjectiles, weaponOwner);
+	function dualArc(weaponOwner) {
+		return new DualArcWeapon(sceneProjectiles, weaponOwner);
 	}
 
 	function getWeapon(type, weaponOwner) {

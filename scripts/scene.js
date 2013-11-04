@@ -85,8 +85,7 @@ define(["player", "enemy", "grid", "weapons"], function(Player, Enemy, Grid, Wea
 			canvas.fillStyle = "rgb(255,255,255)";
 
 			var debugStatements = [
-				"Player X:" + parseInt(player.left(),10),
-				"Player Y:" + parseInt(player.top(),10),
+				"Player X:" + parseInt(player.left(),10) + ", Y: " + parseInt(player.top(),10),
 				"Canvas TopLeft X: " + parseInt(canvasTopLeftX,10) + ", Y: " + parseInt(canvasTopLeftY,10),
 				"Player Projectiles: " + projectiles.player.length,
 				"Enemy Projectiles: " + projectiles.enemy.length

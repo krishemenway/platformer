@@ -33,6 +33,20 @@ define(["collision"], function(Collision) {
 		return grid && grid[cellY] && grid[cellY][cellX] === 1;
 	}
 
+	function collidesWithGridOnTop(shape) {
+		var rightIndex = Math.ceil(shape.right() / gameGridSize);
+		var topIndex = Math.floor(shape.top() / gameGridSize);
+
+		var cells = [
+			gridCell((rightIndex - 1) * gameGridSize, topIndex * gameGridSize, gameGridSize, gameGridSize, rightIndex - 1, topIndex),
+			gridCell((rightIndex - 1) * gameGridSize, (topIndex + 1) * gameGridSize, gameGridSize, gameGridSize, rightIndex - 1, topIndex + 1),
+			gridCell(rightIndex * gameGridSize, topIndex * gameGridSize, gameGridSize, gameGridSize, rightIndex, topIndex),
+			gridCell(rightIndex * gameGridSize, (topIndex + 1) * gameGridSize, gameGridSize, gameGridSize, rightIndex, topIndex + 1)
+		];
+
+		return doesOneCellCollide(cells, shape, Collision.collidesOnRight);
+	}
+
 	function collidesWithGridOnRight(shape) {
 		var rightIndex = Math.ceil(shape.right() / gameGridSize);
 		var topIndex = Math.floor(shape.top() / gameGridSize);

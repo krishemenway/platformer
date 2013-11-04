@@ -1,5 +1,5 @@
 /* globals define */
-define(["grid", "weapon"], function(Grid, Weapon) {
+define(["grid", "weapons/weapon"], function(Grid, Weapon) {
 	"use strict";
 
 	return function enemy() {

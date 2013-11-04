@@ -186,7 +186,7 @@ define(["grid", "weapons", "arsenal"], function(Grid, Weapons, Arsenal) {
 			arsenal = new Arsenal();
 			arsenal.addWeapon(Weapons.getWeapon("straight", self));
 			arsenal.addWeapon(Weapons.getWeapon("arc", self));
-			arsenal.addWeapon(Weapons.getWeapon("grenade", self));
+			arsenal.addWeapon(Weapons.getWeapon("dualArc", self));
 			arsenal.gotoWeaponSlot(0);
 		}
 
