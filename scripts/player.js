@@ -77,6 +77,7 @@ define(["grid", "weapons", "arsenal"], function(Grid, Weapons, Arsenal) {
 			canvas.fillText("Velocity X: " + parseInt(velocityX,10) + " Y:" + parseInt(velocityY, 10), 10, 72);
 			canvas.fillText("IsJumping: " + isJumping, 10, 84);
 			canvas.fillText("Weapon: " + arsenal.currentWeapon().name(), 10, 96);
+			canvas.fillText("Weapon: " + arsenal.currentWeapon().name(), 10, 96);
 		}
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
@@ -185,6 +186,7 @@ define(["grid", "weapons", "arsenal"], function(Grid, Weapons, Arsenal) {
 			arsenal = new Arsenal();
 			arsenal.addWeapon(Weapons.getWeapon("straight", self));
 			arsenal.addWeapon(Weapons.getWeapon("arc", self));
+			arsenal.addWeapon(Weapons.getWeapon("grenade", self));
 			arsenal.gotoWeaponSlot(0);
 		}
 

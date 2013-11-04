@@ -33,8 +33,9 @@ define(function() {
 				return;
 
 			for(var w = currentWeaponIndex + 1; w <= weaponSlots.length; w++) {
-				if(weaponSlots[w >= weaponSlots.length ? w - weaponSlots.length : w] != undefined) {
-					currentWeaponIndex = w;
+				var slotNumber = w >= weaponSlots.length ? w - weaponSlots.length : w;
+				if(weaponSlots[slotNumber] != undefined) {
+					gotoWeaponSlot(slotNumber);
 					return;
 				}
 			}
@@ -44,9 +45,11 @@ define(function() {
 			if(!canSwitchWeapon())
 				return;
 
-			for(var w = currentWeaponIndex - 1; w >= 0; w--) {
-				if(weaponSlots[w >= maxWeaponSlotSize ? w - maxWeaponSlotSize : w] != undefined) {
-					currentWeaponIndex = w;
+			for(var w = currentWeaponIndex - 1; w >= currentWeaponIndex - weaponSlots.length; w--) {
+				var slotNumber = w < 0 ? weaponSlots.length + w : w;
+
+				if(weaponSlots[slotNumber] != undefined) {
+					gotoWeaponSlot(slotNumber);
 					return;
 				}
 			}
@@ -54,6 +57,7 @@ define(function() {
 
 		function gotoWeaponSlot(slot) {
 			currentWeaponIndex = slot;
+			lastSwitchedWeaponTime = new Date().getTime();
 		}
 
 		function canSwitchWeapon() {
