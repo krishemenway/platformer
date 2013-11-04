@@ -19,8 +19,11 @@ define(function() {
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(!isDestroyed) {
-				canvas.fillStyle = "rgb(35,35,35)";
-				canvas.fillRect(x - canvasTopLeftX, y - canvasTopLeftY, width, height);
+				canvas.fillStyle = "rgb(255,255,255)";
+
+				canvas.beginPath();
+				canvas.arc(x - canvasTopLeftX, y - canvasTopLeftY, width, 0, 2 * Math.PI, false);
+				canvas.fill();
 			}
 		}
 

@@ -1,11 +1,10 @@
 /* globals define */
-define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
+define(["player", "enemy", "grid", "weapons"], function(Player, Enemy, Grid, Weapons) {
 	"use strict";
 
 	return function scene(sceneData) {
 		var background,
 			backgroundLoaded,
-			gridSize = 50,
 			sceneWidth = 0,
 			sceneHeight = 0,
 			gameWidth = 0,
@@ -15,25 +14,11 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			canvasTopLeftY = 0,
 			player,
 			enemies = [],
-			platforms = [],
 			projectiles = {
 				player: [],
 				enemy: []
 			},
-			renderOrder = [],
-			grid = [];
-
-		function platformsCollidesWithShape(objectTop, objectRight, objectBottom, objectLeft) {
-			var p;
-
-			for(p = 0; p <= platforms.length - 1; p++) {
-				if(platforms[p].collidesWithVertically(objectTop, objectRight, objectBottom, objectLeft)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
+			renderOrder = [];
 
 		function updateProjectileList(timeSinceLastFrame, setOfProjectiles) {
 			setOfProjectiles.forEach(function(projectile) {
@@ -48,16 +33,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function updateEnemies(timeSinceLastFrame) {
 			for(var e = 0; e < enemies.length; e++) {
-				var enemy = enemies[e];
-
-				if(enemy === null)
-					continue;
-
-				if(!platformsCollidesWithShape(enemy.enemyTop(), enemy.enemyRight(), enemy.enemyBottom(), enemy.enemyLeft())) {
-					enemy.fall(timeSinceLastFrame);
-				}
-
-				enemy.update(timeSinceLastFrame);
+				enemies[e].update(timeSinceLastFrame);
 			}
 		}
 
@@ -66,7 +42,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 		}
 
 		function update(controller, timeSinceLastFrame) {
-			canvasTopLeftX = Math.min(Math.max(player.playerCenter() - gameWidth / 2, 0), lastTopLeftX);
+			canvasTopLeftX = Math.min(Math.max(player.center() - gameWidth / 2, 0), lastTopLeftX);
 			canvasTopLeftY = 0;
 
 			updateProjectiles(timeSinceLastFrame);
@@ -104,53 +80,13 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			}
 		}
 
-		function renderGridHorizontalLines(canvas, firstGridPointY) {
-			for(var gy = firstGridPointY; gy <= canvasTopLeftY + gameHeight; gy += gridSize) {
-				canvas.fillRect(0, gy - canvasTopLeftY, gameWidth, 1);
-			}
-		}
-
-		function renderGridVerticalLines(canvas, firstGridPointX) {
-			for(var gx = firstGridPointX; gx <= canvasTopLeftX + gameWidth; gx += gridSize) {
-				canvas.fillRect(gx - canvasTopLeftX, 0, 1, gameHeight);
-			}
-		}
-
-		function renderCollisionGrid(canvas, firstGridPointX, firstGridPointY) {
-			var gridCellIndexX = 0;
-			var gridCellIndexY = 0;
-
-			canvas.fillStyle = "rgba(255,0,0,.5)";
-			for(var gx = firstGridPointX; gx <= firstGridPointX + gameWidth; gx += gridSize) {
-				gridCellIndexX = Math.floor(gx / gridSize);
-				gridCellIndexY = Math.floor(firstGridPointY / gridSize);
-
-				for(var gy = firstGridPointY; gy <= firstGridPointY + gameHeight; gy += gridSize) {
-					gridCellIndexY = Math.floor(gy / gridSize);
-
-					if(grid[gridCellIndexY] && grid[gridCellIndexY][gridCellIndexX] && grid[gridCellIndexY][gridCellIndexX] === 1) {
-						canvas.fillRect(gx - canvasTopLeftX, gy - canvasTopLeftY, gridSize, gridSize);
-					}
-				}
-			}
-		}
-
-		function renderGrid(canvas) {
-			var firstGridPointY = Math.floor(canvasTopLeftY / gridSize) * gridSize;
-			var firstGridPointX = Math.floor(canvasTopLeftX / gridSize) * gridSize;
-
-			renderGridHorizontalLines(canvas, firstGridPointY);
-			renderGridVerticalLines(canvas, firstGridPointX);
-			renderCollisionGrid(canvas, firstGridPointX, firstGridPointY);
-		}
-
 		function renderDebug(canvas) {
 			canvas.font="12px Arial";
-			canvas.fillStyle = "rgb(0,0,0)";
+			canvas.fillStyle = "rgb(255,255,255)";
 
 			var debugStatements = [
-				"Player X:" + parseInt(player.playerLeft(),10),
-				"Player Y:" + parseInt(player.playerTop(),10),
+				"Player X:" + parseInt(player.left(),10),
+				"Player Y:" + parseInt(player.top(),10),
 				"Canvas TopLeft X: " + parseInt(canvasTopLeftX,10) + ", Y: " + parseInt(canvasTopLeftY,10),
 				"Player Projectiles: " + projectiles.player.length,
 				"Enemy Projectiles: " + projectiles.enemy.length
@@ -181,7 +117,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 				sceneHeight = background.height;
 				sceneWidth = background.width;
 				lastTopLeftX = sceneWidth - gameWidth;
-				initializeGrid(sceneData.grid);
+				initializeGrid();
 			};
 
 			background.src = backgroundSource;
@@ -189,7 +125,7 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 
 		function initializePlayer(playerData) {
 			player = new Player();
-			player.init(playerData, projectiles, platforms);
+			player.init(playerData, projectiles);
 		}
 
 		function initializeEnemies(enemyData) {
@@ -203,30 +139,17 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			}
 		}
 
-		function initializePlatforms(platformData) {
-			if(!platformData)
-				return;
-
-			platformData.forEach(function(platform) {
-				platforms.push(new Platform(platform));
-			});
+		function initializeGrid() {
+			Grid.init(sceneData.grid, sceneWidth, gameWidth, gameHeight, sceneData.gridSize);
 		}
 
-		function initializeGrid(gridCells) {
-			var gridCellPerRow = Math.floor(sceneWidth / gridSize);
-
-			if(gridCells.length % gridCellPerRow !== 0)
-				throw "Invalid Grid Given, Length of grid array was " + gridCells.length + " and expected array with multipler of " + gridCellPerRow;
-
-			for (var g = 0; g < gridCells.length; g += gridCellPerRow)
-			    grid.push( gridCells.slice(g, g + gridCellPerRow) );
-
-			console.log(grid);
+		function initializeWeapons() {
+			Weapons.init(projectiles);
 		}
 
 		function init() {
 			initializeBackground(sceneData.background);
-			initializePlatforms(sceneData.platformData);
+			initializeWeapons();
 			initializePlayer(sceneData.playerData);
 			initializeEnemies(sceneData.enemies);
 
@@ -237,7 +160,9 @@ define(["player", "platform", "enemy"], function(Player, Platform, Enemy) {
 			}
 
 			if(window.showGrid) {
-				renderOrder.push(renderGrid);
+				renderOrder.push(function(canvas) {
+					Grid.render(canvas, canvasTopLeftX, canvasTopLeftY);
+				});
 			}
 		}
 

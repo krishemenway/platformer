@@ -1,5 +1,5 @@
 /* globals define */
-define(["projectile"], function(Projectile) {
+define(["grid", "weapon"], function(Grid, Weapon) {
 	"use strict";
 
 	return function enemy() {
@@ -9,25 +9,42 @@ define(["projectile"], function(Projectile) {
 			width = 0,
 			height = 0,
 			sprite,
+			spriteFacingLeftX,
+			spriteFacingRightX,
 			fallRate = 300,
 			enemySpeed = 150,
 			spriteLoaded,
 			shouldPace,
 			paceDistance,
+			isJumping = false,
+			velocityY = 0,
 			currentDirection,
 			shouldAutoFire = false,
-			fireRate = 2500,
-			bulletSpeed = 300,
 			sightDistance = 150,
-			lastFiredTime = new Date().getTime(),
-			projectileOffset = 50,
 			destroyed,
 			currentPlayer,
-			sceneProjectiles;
+			sceneProjectiles,
+			collision,
+			currentWeapon,
+			team = "enemy";
 
 		var direction = {
-			left: 50,
-			right: 0
+			left: -1,
+			right: 1
+		};
+
+		var self = {
+			init: init,
+			update: update,
+			render: render,
+			fall: fall,
+			left: left,
+			top: top,
+			right: right,
+			bottom: bottom,
+			isDestroyed: isDestroyed,
+			currentDirection: getCurrentDirection,
+			team: getTeam
 		};
 
 		function top() {
@@ -60,28 +77,8 @@ define(["projectile"], function(Projectile) {
 			x += timeSinceLastFrame * enemySpeed;
 		}
 
-		function getProjectileX() {
-			return (currentDirection === direction.left ? left() - 2 : right() + 2);
-		}
-
-		function getProjectileY() {
-			return top() + projectileOffset;
-		}
-
-		function fireWeapon() {
-			var initialX = getProjectileX(),
-				initialY = getProjectileY(),
-				projectileDirection = currentDirection === direction.left ? -1 : 1,
-				projectile = new Projectile(initialX, initialY, 10 , 3, bulletSpeed * projectileDirection);
-
-			lastFiredTime = new Date().getTime();
-			sceneProjectiles.enemy.push(projectile);
-		}
-
-		function fireIfReady() {
-			if(new Date().getTime() >= lastFiredTime + fireRate) {
-				fireWeapon();
-			}
+		function getTeam() {
+			return team;
 		}
 
 		function isDestroyed() {
@@ -89,15 +86,15 @@ define(["projectile"], function(Projectile) {
 		}
 
 		function playerIsWithinSightVertically() {
-			return currentPlayer.playerBottom() > top() && currentPlayer.playerTop() < bottom();
+			return currentPlayer.bottom() > top() && currentPlayer.top() < bottom();
 		}
 
 		function playerIsInSightOnRight() {
-			return currentPlayer.playerLeft() <= right() + sightDistance && currentPlayer.playerLeft() > right();
+			return currentPlayer.left() <= right() + sightDistance && currentPlayer.left() > right();
 		}
 
 		function playerIsInSightOnLeft() {
-			return currentPlayer.playerRight() >= left() - sightDistance && currentPlayer.playerRight() < left();
+			return currentPlayer.right() >= left() - sightDistance && currentPlayer.right() < left();
 		}
 
 		function playerIsWithinSight() {
@@ -106,6 +103,10 @@ define(["projectile"], function(Projectile) {
 			} else {
 				return playerIsInSightOnRight() && playerIsWithinSightVertically();
 			}
+		}
+
+		function getCurrentDirection() {
+			return currentDirection;
 		}
 
 		function pace(timeSinceLastFrame) {
@@ -143,7 +144,7 @@ define(["projectile"], function(Projectile) {
 		}
 
 		function update(timeSinceLastFrame) {
-			if(destroyed)
+			if(isDestroyed())
 				return;
 
 			if(isCollidingWithPlayerProjectile()) {
@@ -151,8 +152,15 @@ define(["projectile"], function(Projectile) {
 				return;
 			}
 
+			if(Grid.collidesWithGridOnBottom(self)) {
+				velocityY = 0;
+				isJumping = false;
+			} else {
+				fall(timeSinceLastFrame);
+			}
+
 			if(playerIsWithinSight() || shouldAutoFire) {
-				fireIfReady();
+				currentWeapon.fire();
 			} else {
 				pace(timeSinceLastFrame);
 			}
@@ -160,7 +168,9 @@ define(["projectile"], function(Projectile) {
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded && !destroyed) {
-				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
+				var spriteX = currentDirection === direction.left ? spriteFacingLeftX : spriteFacingRightX,
+					spriteY = 0;
+				canvas.drawImage(sprite, spriteX, spriteY, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
 			}
 		}
 
@@ -172,12 +182,14 @@ define(["projectile"], function(Projectile) {
 				spriteLoaded = true;
 				width = sprite.width / 2;
 				height = sprite.height;
+				spriteFacingLeftX = width;
+				spriteFacingRightX = 0;
 			};
 
 			sprite.src = pathToSprite;
 		}
 
-		function init(enemyData, player, projectiles) {
+		function init(enemyData, player, projectiles, collisionDetectors) {
 			initializeSprite(enemyData.spriteSource);
 			setDirection(direction.left);
 			shouldAutoFire = enemyData.shouldAutoFire || false;
@@ -188,18 +200,10 @@ define(["projectile"], function(Projectile) {
 			currentPlayer = player;
 			sceneProjectiles = projectiles;
 			destroyed = false;
+			collision = collisionDetectors;
+			currentWeapon = new Weapon("default", sceneProjectiles, self);
 		}
 
-		return {
-			init: init,
-			update: update,
-			render: render,
-			fall: fall,
-			enemyLeft: left,
-			enemyTop: top,
-			enemyRight: right,
-			enemyBottom: bottom,
-			isDestroyed: isDestroyed
-		};
+		return self;
 	};
 });

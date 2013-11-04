@@ -1,51 +1,58 @@
 /* globals define */
-define(["projectile"], function(Projectile) {
+define(["grid", "weapons", "arsenal"], function(Grid, Weapons, Arsenal) {
 	"use strict";
 
 	return function player() {
 		var sprite,
 			spriteLoaded,
+			spriteFacingLeftX = 0,
+			spriteFacingRightX = 0,
 			width,
 			height,
 			currentDirection,
 			playerX = 0,
 			playerY = 0,
 			playerRunSpeed = 1500,
-			playerJumpSpeed = 350,
-			fireRate = 400,
-			lastFiredTime,
+			playerJumpSpeed = 300,
 			isJumping = false,
 			friction = 0.92,
 			gravity = 15,
 			velocityX = 0,
 			velocityY = 100,
 			sceneProjectiles,
-			scenePlatforms;
+			lastSafePoint,
+			team = "player",
+			arsenal;
 
 		var direction = {
-			left: 50,
-			right: 0
+			left: -1,
+			right: 1
 		};
 
-		function center() {
-			return left() + width / 2;
-		}
+		var self = {
+			init: init,
+			update: update,
+			render: render,
+			bottom: bottom,
+			top: top,
+			right: right,
+			left: left,
+			center: center,
+			y: top,
+			x: left,
+			width: getWidth,
+			height: getHeight,
+			currentDirection: getCurrentDirection,
+			team: getTeam
+		};
 
-		function right() {
-			return left() + width;
-		}
-
-		function left() {
-			return playerX;
-		}
-
-		function top() {
-			return playerY;
-		}
-
-		function bottom() {
-			return top() + height;
-		}
+		function center() { return left() + width / 2; }
+		function right() { return left() + width; }
+		function left() { return playerX; }
+		function top() { return playerY; }
+		function bottom() { return top() + height; }
+		function getWidth() { return width; }
+		function getHeight() { return height; }
 
 		function goLeft(timeSinceLastFrame) {
 			setDirection(direction.left);
@@ -61,25 +68,21 @@ define(["projectile"], function(Projectile) {
 			currentDirection = direction;
 		}
 
-		function fireWeapon() {
-			var initialX = (currentDirection === direction.left ? left() : right()) + 2,
-				initialY = top() + 30,
-				projectileDirection = currentDirection === direction.left ? -1 : 1;
-
-			var projectile = new Projectile(initialX, initialY, 10, 5, 900 * projectileDirection);
-
-			lastFiredTime = new Date().getTime();
-			sceneProjectiles.player.push(projectile);
+		function getCurrentDirection() {
+			return currentDirection;
 		}
 
 		function renderDebug(canvas) {
+			canvas.fillStyle = "rgb(255,255,255)";
 			canvas.fillText("Velocity X: " + parseInt(velocityX,10) + " Y:" + parseInt(velocityY, 10), 10, 72);
 			canvas.fillText("IsJumping: " + isJumping, 10, 84);
+			canvas.fillText("Weapon: " + arsenal.currentWeapon().name(), 10, 96);
 		}
 
 		function render(canvas, canvasTopLeftX, canvasTopLeftY) {
 			if(spriteLoaded) {
-				canvas.drawImage(sprite, currentDirection, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
+				var spriteX = currentDirection === direction.left ? spriteFacingLeftX : spriteFacingRightX;
+				canvas.drawImage(sprite, spriteX, 0, width, height, left() - canvasTopLeftX, top() - canvasTopLeftY, width, height);
 			}
 
 			if(window.debug) {
@@ -94,14 +97,8 @@ define(["projectile"], function(Projectile) {
 			}
 		}
 
-		function fireIfReady() {
-			if(lastFiredTime === undefined || new Date().getTime() > lastFiredTime + fireRate) {
-				fireWeapon();
-			}
-		}
-
-		function isStandingOnPlatform(timeSinceLastFrame) {
-			return playerY + velocityY * timeSinceLastFrame > 293;
+		function getTeam() {
+			return team;
 		}
 
 		function update(controller, timeSinceLastFrame) {
@@ -112,39 +109,52 @@ define(["projectile"], function(Projectile) {
 				goRight(timeSinceLastFrame);
 			}
 
-			if(controller.jumpKeyIsPressed()) {
-				jump();
-			}
-
 			velocityX *= friction;
 			velocityY += gravity + velocityY < 1500 ? gravity : 0;
 
-			if(isStandingOnPlatform(timeSinceLastFrame)) {
+			if(Grid.collidesWithGridOnBottom(self)) {
+				velocityY = 0;
 				isJumping = false;
 			} else {
 				playerY += velocityY * timeSinceLastFrame;
 			}
-		    
-		    if(playerX + velocityX * timeSinceLastFrame > 0) {
-				playerX += velocityX * timeSinceLastFrame;
-		    }
 
-			if(controller.fireKeyIsPressed()) {
-				fireIfReady();
+			if((Grid.collidesWithGridOnRight(self) && velocityX >= 0) || (Grid.collidesWithGridOnLeft(self) && velocityX <= 0))
+				velocityX = 0;
+
+			if(controller.jumpKeyIsPressed()) {
+				jump();
+				playerY += velocityY * timeSinceLastFrame;
 			}
 
+			playerX += velocityX * timeSinceLastFrame;
+
+			if(controller.fireKeyIsPressed())
+				arsenal.currentWeapon().fire();
+
+			if(controller.previousWeaponKeyIsPressed())
+				arsenal.gotoPreviousWeapon();
+
+			if(controller.nextWeaponKeyIsPressed())
+				arsenal.gotoNextWeapon();
+
 			cleanupProjectiles();
+
+			if(playerY > 1000)
+				resetPlayer();
 		}
 
 		function cleanupProjectiles() {
-			if(lastFiredTime + 4000 <= new Date().getTime()) {
+			if(arsenal.currentWeapon().timeSinceLastFired() > 4000) {
 				sceneProjectiles.player = [];
 			}
 		}
 
-		function setPosition(newPlayerX, newPlayerY) {
-			playerX = newPlayerX;
-			playerY = newPlayerY;
+		function resetPlayer() {
+			playerX = lastSafePoint.x;
+			playerY = lastSafePoint.y;
+			velocityX = 0;
+			velocityY = 0;
 		}
 
 		function initializeSprite(pathToSprite) {
@@ -155,29 +165,29 @@ define(["projectile"], function(Projectile) {
 				spriteLoaded = true;
 				width = sprite.width / 2;
 				height = sprite.height;
+				spriteFacingRightX = 0;
+				spriteFacingLeftX = width;
 			};
 
 			sprite.src = pathToSprite;
 		}
 
-		function init(playerData, projectiles, platforms) {
-			initializeSprite(playerData.playerSprite);
+		function init(playerData, projectiles) {
+			playerX = playerData.initialX;
+			playerY = playerData.initialY;
+
+			lastSafePoint = {x: playerX, y: playerY};
+
+			initializeSprite(playerData.spriteSource);
 			setDirection(direction.right);
-			setPosition(playerData.initialX, playerData.initialY);
 			sceneProjectiles = projectiles;
-			scenePlatforms = platforms;
+
+			arsenal = new Arsenal();
+			arsenal.addWeapon(Weapons.getWeapon("straight", self));
+			arsenal.addWeapon(Weapons.getWeapon("arc", self));
+			arsenal.gotoWeaponSlot(0);
 		}
 
-		return {
-			init: init,
-			update: update,
-			render: render,
-			setPosition: setPosition,
-			playerBottom: bottom,
-			playerTop: top,
-			playerRight: right,
-			playerLeft: left,
-			playerCenter: center
-		};
+		return self;
 	};
 });

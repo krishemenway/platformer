@@ -2,15 +2,16 @@
 define(["exports"], function(exports) {
 	"use strict";
 
-	var startGame;
+	var startGame,
+		startGameImage,
+		startGameImageWidth = 0,
+		startGameImageHeight = 0,
+		startGameImageLoaded;
 
 	function render(canvas) {
-		canvas.fillStyle = "rgb(200,200,200)";
-		canvas.fillRect(0,0,10000,10000);
-
-		canvas.font="32px Arial";
-		canvas.fillStyle = "rgb(0,0,0)";
-		canvas.fillText("Press Enter to start", 50, 50);
+		if(startGameImageLoaded) {
+			canvas.drawImage(startGameImage, 0, 0, startGameImageWidth, startGameImageHeight);
+		}
 	}
 
 	function update(controller, timeSinceLastFrame) {
@@ -21,6 +22,16 @@ define(["exports"], function(exports) {
 
 	function init(startGameFunction) {
 		startGame = startGameFunction;
+
+		startGameImage = new Image();
+
+		startGameImage.onload = function() {
+			startGameImageLoaded = true;
+			startGameImageHeight = startGameImage.height;
+			startGameImageWidth = startGameImage.width;
+		};
+
+		startGameImage.src = "images/startscreen.jpg";
 	}
 
 	exports.init = init;

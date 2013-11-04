@@ -10,7 +10,9 @@ define(["startScreenState", "runningGameState", "exports"], function(startScreen
 			leftKey: [65,37,100],
 			rightKey: [68,39,102],
 			fireKey: 32,
-			jumpKey: [87,38,104]
+			jumpKey: [87,38,104],
+			previousWeaponKey: [81],
+			nextWeaponKey: [69]
 		};
 
 	function controlIsActivated(control) {
